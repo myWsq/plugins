@@ -1,7 +1,7 @@
 {
   "name": "dev",
-  "version": "0.1.0",
-  "description": "Plan-driven software development: explore and converge, write an implementation plan, then execute and review it.",
+  "version": "0.2.0",
+  "description": "Plan-driven software development with MCP-backed local-agent delegation: explore, plan, execute, and review.",
   "author": {
     "name": "Shuaiqi Wang",
     "email": "wsq961@outlook.com",
@@ -14,6 +14,8 @@
     "development-workflow",
     "planning",
     "skills",
-    "code-review"
+    "code-review",
+    "agent-delegation",
+    "mcp"
   ]
 }

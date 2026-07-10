@@ -1,12 +1,12 @@
 # Delegation Contract
 
-Use this reference when `dev-execute-plan` delegates implementation — to a subagent of the host environment (preferred), to codex via its official MCP tool when the host exposes one, or to an external agent CLI. Self-execution does not use this path.
+Use this reference when `dev-execute-plan` delegates implementation — to a subagent of the host environment (preferred), or to a local Codex, Claude Code, or Cursor agent through the bundled `dev-agents` MCP server. Self-execution does not use this path.
 
-All channels share the same prompt content, the same monitoring duty, and the same REVISE loop. They differ in dispatch mechanics and consent: a subagent runs inside the host's existing permission envelope and needs no extra consent; codex via MCP and an external CLI both run with approvals bypassed and require the disclosure covered by the departure check.
+Both channels share the same prompt content, monitoring duty, and REVISE loop. They differ in dispatch and consent: a subagent runs inside the host's permission envelope and needs no extra consent; every local agent runs unattended. Codex and Claude have full device access, while Cursor auto-approves inside its workspace sandbox. The departure check must disclose the selected adapter's reported execution mode before `delegate_start` is used.
 
 ## Prompt
 
-For an external CLI, write the prompt to a temporary file **outside the repository** (for example via `mktemp -t dev-plan-prompt`). Never create it inside the repo: it would dirty the worktree that preflight just verified, and the delegated agent — which is told to commit — could commit it by accident. For a subagent or for codex via MCP, pass the same content directly as the call's prompt argument; no file is needed.
+Pass the prompt directly to the host subagent task or the MCP `delegate_start` call. Do not create a prompt file in the repository. The broker sends it to the selected process over stdin and does not put it in process arguments or proactively add it to broker events. The delegated agent can still echo prompt content in its own output, so keep secrets out of prompts.
 
 The prompt contains:
 
@@ -30,43 +30,37 @@ Dispatch via the host's subagent/task-spawning tool (such as Claude Code's `Agen
 - Run in the background when the host supports it, so the orchestrator can monitor.
 - The subagent works in the current repository on the current branch, inside the host's existing permission envelope.
 
-### Codex (MCP)
+### Local agent through `dev-agents`
 
-Use this when a tool named `mcp__codex__codex` is available in this session (the official Codex MCP server), instead of the CLI path below.
+Discover the MCP server by its `dev-agents` name and tool names; the host-specific fully qualified tool identifier may differ between Claude Code and Codex.
 
-- Call `mcp__codex__codex` with `prompt` (the full dispatch prompt), `cwd` (the repo root), and `model` if the user named one.
-- Set `sandbox: "workspace-write"` and `approval-policy: "never"` — `workspace-write` permits shell commands and file writes inside `cwd`, which covers `git commit` there; it is narrower than the CLI's `--dangerously-bypass-approvals-and-sandbox` and so needs less disclosure. This is not yet confirmed against a real dispatch — if the executor's commits go missing, that is the first thing to check; fall back to `sandbox: "danger-full-access"` if `workspace-write` turns out to block it. Either setting still counts as approvals bypassed and needs the same one-time disclosure as an external CLI (see the skill's selection rules).
-- This call is synchronous foreground: it blocks until codex finishes, unlike the backgrounded CLI dispatch below, and its full output lands in the orchestrator's context — a partial regression from delegation's usual point of keeping that context free for review. That is acceptable for a single serial plan (monitor by reading its result when it returns; there is no separate poll-and-kill window). It rules out this path for parallel groups, which need concurrent dispatch — use the CLI there instead when available.
-- REVISE: resend a fresh, self-contained prompt via `mcp__codex__codex` (same as a stateless CLI round), not `mcp__codex__codex-reply` — the tool's response shape has not been verified to carry a reusable thread id here, so don't assume conversation state survives across rounds.
+1. Call `agents_list`. Select only an entry whose `id` matches the recorded `agent:<id>` and whose status is `ready`. This is an installation check only; authentication is deliberately left to the real run.
+2. Call `delegate_start` with:
+   - `agent_id`: `codex`, `cursor`, or `claude`;
+   - `prompt`: the complete dispatch prompt;
+   - `cwd`: the absolute Git worktree path;
+   - `model`: only when recorded or named by the user;
+   - `confirmed_unattended: true`, only after the departure check or explicit user request supplied standing consent;
+   - `timeout_ms`: an optional bounded execution timeout in milliseconds.
+3. Record the returned `run_id`. The start call is asynchronous; it does not mean implementation finished.
 
-### External agent CLI
+The broker owns the allowlisted executable, fixed unattended flags, stdin prompt transport, process group, timeout, and output buffer. Do not pass binary paths, raw arguments, environment variables, or permission overrides. Codex and Claude report `full_access: true`; Cursor reports `full_access: false` with `workspace_sandbox_unattended`.
 
-Run from the skill directory:
-
-```bash
-python3 "<skill-dir>/scripts/dispatch.py" \
-  <agent> <repo-root> "$PROMPT_FILE" [model]
-```
-
-- `<agent>` must come from `detect-agents.py` output (`AGENTS=...`) or an explicit user choice.
-- `[model]` is optional.
-- The prompt argument is a file path, not raw prompt text.
-- The delegated agent works in the current repository on the current branch.
-- `dispatch.py` runs the target CLI with approvals and sandbox disabled (`--dangerously-bypass-approvals-and-sandbox` / `--yolo` / `--dangerously-skip-permissions`). This must have been disclosed to and confirmed by the user before the first dispatch (see the skill's selection rules).
+`cwd` must be an absolute Git worktree root. The first successful start pins that broker process to the repository's Git common directory; later starts may use linked worktrees from the same repository only. One broker process permits at most one active writer per worktree, so parallel members need separate worktrees. These checks are scheduling constraints, not a security sandbox or a device-wide lock: another broker process can exist, and full-access Codex or Claude runs can access paths outside `cwd`.
 
 ### Parallel groups
 
-When dispatching a parallel group (see the skill's "Parallel group execution" section), each member runs in its own worktree on its own branch; never dispatch two members into the same worktree. The prompt is unchanged — "the current branch" in the preface resolves to the member's branch inside its worktree. For an external CLI, pass the member's worktree path as `<repo-root>` to `dispatch.py`.
+When dispatching a parallel group, each member runs in its own worktree and branch; never start two writers in the same worktree. Call `delegate_start` once per member and retain the member-to-run mapping. The prompt is unchanged — "the current branch" resolves to that member's branch.
 
 ## Monitor
 
-Run dispatch in the background when the host supports it. Poll output for progress. Kill early if the agent is stuck, clearly off-plan, edits out-of-scope files, or drifts off-role into running validation commands and fix-loops — in a parallel group an out-of-scope edit also breaks the group's conflict-free merge guarantee, so kill and REVISE immediately.
+For a local agent, call `delegate_get` with its `run_id`, output cursor, and a bounded long-poll interval. Pass each response's `next_after` as the next request's `after`; if `truncated` is true, note that earlier buffered events were evicted and continue from the returned window. Poll through `running`, `canceling`, or `timing_out` until the run reaches `completed`, `failed`, `canceled`, or `timed_out`. Monitor repository changes as well as broker activity. Call `delegate_cancel` if the agent is stuck, clearly off-plan, edits out-of-scope files, or drifts into validation/fix loops. Cancellation is idempotent; continue polling until terminal. In a parallel group, monitor every run independently.
 
 Do not trust the delegated agent’s report as proof. Rerun the plan’s done criteria and run the full code review defined in the skill’s Verify section — the executor made unreviewed design choices, and this review is the only quality gate they pass through. Also run `git status --porcelain` after the agent exits: uncommitted changes do not appear in the baseline diff, so a non-empty status means unverified work.
 
 ## Revise
 
-If the host supports continuing a previously spawned subagent with its context intact, send the revision feedback to that same subagent. Otherwise — external CLIs and codex via MCP always, subagents on hosts without resume — each dispatch is a fresh, stateless session: the executor remembers nothing from the previous round, so the REVISE prompt must be self-contained.
+If the host supports continuing a previously spawned subagent with its context intact, send revision feedback to that subagent. A local-agent REVISE is always a fresh `delegate_start` run with the same `agent_id`, worktree, and standing unattended-execution consent; it is stateless, so the prompt must be self-contained.
 
 For REVISE, dispatch a prompt containing:
 

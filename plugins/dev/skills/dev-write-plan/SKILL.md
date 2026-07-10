@@ -78,7 +78,7 @@ Use this structure:
 - Risk: LOW | MED | HIGH
 - Depends on: none | plans/NNN-*.md
 - Category: bug | feature | tests | refactor | docs | dx | migration
-- Execution: subagent[ <model>] | <agent CLI>[ <model>] | self — from the departure check; omit the line when the check skipped execution mode (`dev-execute-plan` asks at dispatch time)
+- Execution: subagent[ <model>] | agent:<id>[ <model>] | self — from the departure check; omit the line when the check skipped execution mode (`dev-execute-plan` asks at dispatch time)
 - Planned at: `<short-sha>`, <YYYY-MM-DD>
 
 ## Requirement
