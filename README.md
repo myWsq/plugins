@@ -4,7 +4,7 @@ A personal marketplace of reusable skills, MCP integrations, and agent workflows
 
 ## Plugins
 
-- `dev` `v0.1.0` — Plan-driven software development: explore and converge, write an implementation plan, then execute and review it.
+- [`dev`](docs/dev.md) — Plan-driven software development
 
 ## Claude Code
 
