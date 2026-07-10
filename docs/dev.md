@@ -4,8 +4,6 @@
 
 The division of labor: the orchestrating agent explores the code, grills the requirement into a converged direction, writes the plan, and reviews the result. The implementation itself is delegated by default to a subagent running on a lower model tier; external agent CLIs and self-execution are alternatives.
 
-`dev` is distributed through the personal [`myWsq/plugins`](https://github.com/myWsq/plugins) marketplace for both Claude Code and Codex. When you only need part of the workflow, individual skills remain available from the upstream [`myWsq/dev-skills`](https://github.com/myWsq/dev-skills) repository through [`npx skills`](https://github.com/vercel-labs/skills).
-
 ## Skills
 
 | Skill | Purpose | Output |
@@ -55,47 +53,6 @@ Regardless of mode, the orchestrator verifies the result itself: it re-runs ever
 The roles are split deliberately: the delegated executor **implements only** — it writes the code and the tests the plan requires, but runs no validation commands at all. Every check runs on the orchestrator's side, cheapest first: mechanical checks (unit tests, typecheck, lint), then code review, then acceptance-tier verification — e2e/UI suites, anything needing a running app, browser, or external service, a verify skill. Failures return to the executor as concrete revision feedback carrying the error output. The executor's self-verification would never be accepted as evidence anyway, and self-validation invites fix-loops that bleed effort away from the implementation.
 
 For a **parallel group**, each member is dispatched into its own git worktree and branch; the orchestrator verifies each member as it finishes, then merges the passing branches back sequentially. Disjoint scopes make these merges conflict-free by construction — a merge conflict is evidence of a scope violation and is handled as a verification failure, never resolved silently.
-
-## Installation
-
-### Install from the `plugins` marketplace
-
-#### Claude Code
-
-```text
-/plugin marketplace add myWsq/plugins
-/plugin install dev@plugins
-```
-
-#### Codex
-
-```bash
-codex plugin marketplace add myWsq/plugins
-codex plugin add dev@plugins
-```
-
-Both paths install the `dev` plugin with all three skills.
-
-### Install individual skills with `npx skills`
-
-Use this path when you only want one skill, or when your agent consumes plain `SKILL.md` directories directly.
-
-Install all skills:
-
-```bash
-npx skills add myWsq/dev-skills
-```
-
-Install a single skill:
-
-```bash
-npx skills add myWsq/dev-skills --skill dev-explore
-```
-
-Useful options:
-
-- `--list`: list the skills available in this repository.
-- `-g`: install globally for reuse across projects.
 
 ## Example prompts
 
