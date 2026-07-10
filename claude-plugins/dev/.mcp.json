@@ -1,10 +1,8 @@
 {
-  "mcpServers": {
-    "dev-agents": {
-      "command": "node",
-      "args": [
-        "${CLAUDE_PLUGIN_ROOT}/mcp/server.mjs"
-      ]
-    }
+  "dev-agents": {
+    "command": "node",
+    "args": [
+      "${CLAUDE_PLUGIN_ROOT}/mcp/server.mjs"
+    ]
   }
 }

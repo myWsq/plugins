@@ -185,7 +185,7 @@ export function createRequestHandler(broker = createBroker()) {
         result: {
           protocolVersion: MCP_PROTOCOL_VERSION,
           capabilities: { tools: { listChanged: false } },
-          serverInfo: { name: "dev-agents", version: "0.2.0" },
+          serverInfo: { name: "dev-agents", version: "0.2.1" },
           instructions:
             "Delegations are asynchronous and unattended. Codex and Claude disable sandboxing; Cursor keeps its workspace sandbox enabled. Set confirmed_unattended only from current user consent, including recorded standing consent."
         }
