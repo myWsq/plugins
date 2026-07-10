@@ -1,0 +1,19 @@
+{
+  "name": "dev",
+  "version": "0.1.0",
+  "description": "Plan-driven software development: explore and converge, write an implementation plan, then execute and review it.",
+  "author": {
+    "name": "Shuaiqi Wang",
+    "email": "wsq961@outlook.com",
+    "url": "https://github.com/myWsq"
+  },
+  "homepage": "https://github.com/myWsq/plugins",
+  "repository": "https://github.com/myWsq/plugins-builder",
+  "license": "MIT",
+  "keywords": [
+    "development-workflow",
+    "planning",
+    "skills",
+    "code-review"
+  ]
+}
