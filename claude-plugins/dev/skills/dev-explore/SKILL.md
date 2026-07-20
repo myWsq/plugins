@@ -7,6 +7,7 @@ description: Read-only codebase and requirement exploration before planning. Use
 
 Explore the relevant code, clarify the requirement, and when the user proposes a change, converge on a design direction before planning. Do not implement, do not write plans, and do not modify files. The output is a concise understanding and, when applicable, an approved direction that the user or `dev-write-plan` can use.
 
+
 ## Rules
 
 1. Do not edit files, create files, format code, commit, install dependencies, or run commands that mutate the workspace.

@@ -15,6 +15,14 @@ A personal marketplace of reusable skills, MCP integrations, and agent workflows
 
 ## Codex
 
+Enable structured questions before installing the plugin:
+
+```bash
+codex features enable default_mode_request_user_input
+```
+
+Restart Codex or open a new session after enabling the feature, then install the plugin:
+
 ```bash
 codex plugin marketplace add myWsq/plugins
 codex plugin add <plugin-name>@plugins

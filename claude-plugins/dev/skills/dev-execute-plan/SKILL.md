@@ -9,6 +9,7 @@ Execute one plan on the current branch. Delegate implementation to a host subage
 
 The plan is an outcome contract, not a step-by-step script: the executor designs the implementation against the live code, guided by the plan's Requirement and Decisions & tradeoffs. Quality is therefore enforced at verification — done criteria, scope, and fidelity to recorded decisions — not by matching prescribed edits.
 
+
 ## Rules
 
 1. Start only from a clean worktree: `git status --porcelain` must be empty. Exception: pending files under `plans/` only — commit them as a plan-handoff commit before recording the baseline.

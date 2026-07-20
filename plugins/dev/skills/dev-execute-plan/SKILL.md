@@ -9,6 +9,18 @@ Execute one plan on the current branch. Delegate implementation to a host subage
 
 The plan is an outcome contract, not a step-by-step script: the executor designs the implementation against the live code, guided by the plan's Requirement and Decisions & tradeoffs. Quality is therefore enforced at verification — done criteria, scope, and fidelity to recorded decisions — not by matching prescribed edits.
 
+## Codex prerequisite
+
+Before starting, confirm that `request_user_input` is available in the current tool list. When it
+is available, prefer it for every question that can be represented as structured choices.
+
+If it is unavailable, stop and tell the user to run:
+
+    codex features enable default_mode_request_user_input
+
+Then ask them to restart Codex or open a new session. Do not silently replace structured questions
+with guessed answers or a plain-text fallback.
+
 ## Rules
 
 1. Start only from a clean worktree: `git status --porcelain` must be empty. Exception: pending files under `plans/` only — commit them as a plan-handoff commit before recording the baseline.

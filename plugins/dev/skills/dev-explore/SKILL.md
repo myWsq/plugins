@@ -7,6 +7,18 @@ description: Read-only codebase and requirement exploration before planning. Use
 
 Explore the relevant code, clarify the requirement, and when the user proposes a change, converge on a design direction before planning. Do not implement, do not write plans, and do not modify files. The output is a concise understanding and, when applicable, an approved direction that the user or `dev-write-plan` can use.
 
+## Codex prerequisite
+
+Before starting, confirm that `request_user_input` is available in the current tool list. When it
+is available, prefer it for every question that can be represented as structured choices.
+
+If it is unavailable, stop and tell the user to run:
+
+    codex features enable default_mode_request_user_input
+
+Then ask them to restart Codex or open a new session. Do not silently replace structured questions
+with guessed answers or a plain-text fallback.
+
 ## Rules
 
 1. Do not edit files, create files, format code, commit, install dependencies, or run commands that mutate the workspace.
@@ -48,7 +60,7 @@ Ask the questions one at a time, waiting for feedback on each question before co
 
 Opt-out: if the user says "don't grill me" or asks to keep it quick, ask only for decisions that cannot be inferred safely and derive the rest from code and conventions. The opt-out holds for the rest of the session unless the user asks to be grilled again.
 
-Prefer the environment's structured user-question tool (`AskUserQuestion`, `request_user_input`, or an equivalent) with concrete options and a recommended default; fall back to plain chat for open-ended questions or when no such tool exists.
+Prefer `request_user_input` with concrete options and a recommended default; use plain chat only for genuinely open-ended questions that the structured tool cannot represent.
 
 Grilling adapted from [mattpocock/skills](https://github.com/mattpocock/skills/blob/main/skills/productivity/grilling/SKILL.md).
 
