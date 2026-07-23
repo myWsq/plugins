@@ -5,6 +5,7 @@ A personal marketplace of reusable skills, MCP integrations, and agent workflows
 ## Plugins
 
 - [`dev`](docs/dev.md) — Plan-driven software development
+- [`commit`](docs/commit.md) — Commit, PR, and branch cleanup delegated to the host's cheapest model
 
 ## Claude Code
 
