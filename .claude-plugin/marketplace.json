@@ -20,6 +20,19 @@
       },
       "category": "development",
       "homepage": "https://github.com/myWsq/plugins"
+    },
+    {
+      "name": "commit",
+      "source": "./claude-plugins/commit",
+      "version": "0.1.0",
+      "description": "Delegate git commit, push, and pull-request workflows to a subagent on the host's cheapest model, keeping routine version-control work off the main session model.",
+      "author": {
+        "name": "Shuaiqi Wang",
+        "email": "wsq961@outlook.com",
+        "url": "https://github.com/myWsq"
+      },
+      "category": "development",
+      "homepage": "https://github.com/myWsq/plugins"
     }
   ]
 }

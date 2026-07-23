@@ -1,0 +1,40 @@
+{
+  "name": "commit",
+  "version": "0.1.0",
+  "description": "Delegate git commit, push, and pull-request workflows to a subagent on the host's cheapest model, keeping routine version-control work off the main session model.",
+  "author": {
+    "name": "Shuaiqi Wang",
+    "email": "wsq961@outlook.com",
+    "url": "https://github.com/myWsq"
+  },
+  "homepage": "https://github.com/myWsq/plugins",
+  "repository": "https://github.com/myWsq/plugins-builder",
+  "license": "MIT",
+  "keywords": [
+    "git",
+    "commit",
+    "pull-request",
+    "skills",
+    "agent-delegation"
+  ],
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "Commit",
+    "shortDescription": "Delegate commit, push, and PR flows to a cheap subagent.",
+    "longDescription": "Commit mirrors the command surface of the official commit-commands plugin with three skills — commit, commit-pr, and commit-clean — each of which has the main model delegate the whole flow to a subagent running on the host's cheapest available model. The subagent stages related changes, checks for staged secrets, writes a message in the repository's existing style following the host's standard commit conventions, pushes and opens a PR only when the invoked flow asks for it, and commit-clean safely deletes only local branches whose upstream is gone.",
+    "developerName": "Shuaiqi Wang",
+    "category": "Developer Tools",
+    "capabilities": [
+      "Skills",
+      "Git",
+      "Agent Delegation"
+    ],
+    "websiteURL": "https://github.com/myWsq/plugins",
+    "defaultPrompt": [
+      "Commit my changes.",
+      "Commit, push, and open a PR.",
+      "Clean up branches whose remote is gone."
+    ],
+    "brandColor": "#059669"
+  }
+}
