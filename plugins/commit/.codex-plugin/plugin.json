@@ -1,7 +1,7 @@
 {
   "name": "commit",
-  "version": "0.1.0",
-  "description": "Delegate git commit, push, and pull-request workflows to a subagent on the host's cheapest model, keeping routine version-control work off the main session model.",
+  "version": "0.2.0",
+  "description": "Git commit, push, and pull-request workflows with a fixed safety floor: stage by name, refuse staged secrets, and never put a commit on the remote default branch.",
   "author": {
     "name": "Shuaiqi Wang",
     "email": "wsq961@outlook.com",
@@ -15,19 +15,18 @@
     "commit",
     "pull-request",
     "skills",
-    "agent-delegation"
+    "branch-cleanup"
   ],
   "skills": "./skills/",
   "interface": {
     "displayName": "Commit",
-    "shortDescription": "Delegate commit, push, and PR flows to a cheap subagent.",
-    "longDescription": "Commit mirrors the command surface of the official commit-commands plugin with three skills — commit, commit-pr, and commit-clean — each of which has the main model delegate the whole flow to a subagent running on the host's cheapest available model. The subagent stages related changes, checks for staged secrets, writes a message in the repository's existing style following the host's standard commit conventions, pushes and opens a PR only when the invoked flow asks for it, and commit-clean safely deletes only local branches whose upstream is gone.",
+    "shortDescription": "Commit, push, and PR flows with a fixed safety floor.",
+    "longDescription": "Commit mirrors the command surface of the official commit-commands plugin with three skills — commit, commit-pr, and commit-clean — sharing one commit flow: stage related changes by name, refuse to commit secrets, and write a message in the repository's existing style that explains why. commit-pr additionally never switches the working tree's branch; when invoked on the default branch it records the commit as a new local ref, pushes that ref, and opens the PR with an explicit head, optionally returning the local default branch to its remote state. commit-clean deletes only local branches whose upstream is marked gone, removing their linked worktrees first.",
     "developerName": "Shuaiqi Wang",
     "category": "Developer Tools",
     "capabilities": [
       "Skills",
-      "Git",
-      "Agent Delegation"
+      "Git"
     ],
     "websiteURL": "https://github.com/myWsq/plugins",
     "defaultPrompt": [

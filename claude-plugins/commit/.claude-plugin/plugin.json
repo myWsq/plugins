@@ -1,7 +1,7 @@
 {
   "name": "commit",
-  "version": "0.1.0",
-  "description": "Delegate git commit, push, and pull-request workflows to a subagent on the host's cheapest model, keeping routine version-control work off the main session model.",
+  "version": "0.2.0",
+  "description": "Git commit, push, and pull-request workflows with a fixed safety floor: stage by name, refuse staged secrets, and never put a commit on the remote default branch.",
   "author": {
     "name": "Shuaiqi Wang",
     "email": "wsq961@outlook.com",
@@ -15,6 +15,6 @@
     "commit",
     "pull-request",
     "skills",
-    "agent-delegation"
+    "branch-cleanup"
   ]
 }
