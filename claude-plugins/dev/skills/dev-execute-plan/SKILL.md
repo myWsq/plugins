@@ -1,18 +1,18 @@
 ---
 name: dev-execute-plan
-description: Execute an implementation plan written by dev-write-plan under `plans/` on the current branch, or a parallel plan group concurrently in per-plan worktrees. Use when the user asks to implement, run, execute, or delegate a plan such as `plans/001`, `execute 002`, `use codex/cursor/claude for this plan`, `run the next TODO plan`, or `run plans 002 and 003 in parallel`. Prefers a host subagent, supports local agents detected and dispatched through the bundled dev-agents MCP server, and can self-execute before verifying and reviewing the diff.
+description: Execute an implementation plan written by dev-write-plan under `wiki/plans/` on the current branch, or a parallel plan group concurrently in per-plan worktrees. Use when the user asks to implement, run, execute, or delegate a plan such as `wiki/plans/001`, `execute 002`, `use codex/cursor/claude for this plan`, `run the next TODO plan`, or `run plans 002 and 003 in parallel`. Prefers a host subagent, supports local agents detected and dispatched through the bundled dev-agents MCP server, and can self-execute before verifying and reviewing the diff.
 ---
 
 # dev-execute-plan
 
-Execute one plan on the current branch. Delegate implementation to a host subagent (preferred), delegate to a detected local agent through the bundled dev-agents MCP server, or implement it yourself — then verify the result against the plan. When `plans/README.md` marks a parallel group whose members are all ready, execute the group concurrently — one worktree per member — following "Parallel group execution" below.
+Execute one plan on the current branch. Delegate implementation to a host subagent (preferred), delegate to a detected local agent through the bundled dev-agents MCP server, or implement it yourself — then verify the result against the plan. When `wiki/plans/README.md` marks a parallel group whose members are all ready, execute the group concurrently — one worktree per member — following "Parallel group execution" below.
 
 The plan is an outcome contract, not a step-by-step script: the executor designs the implementation against the live code, guided by the plan's Requirement and Decisions & tradeoffs. Quality is therefore enforced at verification — done criteria, scope, and fidelity to recorded decisions — not by matching prescribed edits.
 
 
 ## Rules
 
-1. Start only from a clean worktree: `git status --porcelain` must be empty. Exception: pending files under `plans/` only — commit them as a plan-handoff commit before recording the baseline.
+1. Start only from a clean worktree: `git status --porcelain` must be empty. Exception: pending files under `wiki/plans/` only — commit them as a plan-handoff commit before recording the baseline.
 2. Record a baseline SHA before work: `git rev-parse HEAD`.
 3. Change only files listed in the plan’s in-scope section.
 4. Do not push, open PRs, merge, or reset unless the user explicitly asks.
@@ -25,7 +25,7 @@ The plan is an outcome contract, not a step-by-step script: the executor designs
 
 ### 1. Locate and read the plan
 
-- Use the user-provided number/path, or pick the next TODO plan from `plans/README.md`.
+- Use the user-provided number/path, or pick the next TODO plan from `wiki/plans/README.md`.
 - Read the full plan and any listed prerequisite plans. Note the plan's `Execution:` field if present — it records the mode chosen at the departure check.
 - Stop if a prerequisite is not DONE.
 
@@ -55,7 +55,7 @@ Model choice: for a subagent, default to one model tier below the orchestrating 
 
 ### 3. Preflight
 
-1. Confirm clean worktree. If the only pending files are under `plans/`, commit them first (Rule 1); anything else means stop.
+1. Confirm clean worktree. If the only pending files are under `wiki/plans/`, commit them first (Rule 1); anything else means stop.
 2. Record baseline SHA.
 3. Run the plan’s drift check.
 4. If drift touches files cited under the plan's Decisions & tradeoffs, check whether the cited facts still hold. Stop only if a fact a decision depends on is broken; cosmetic drift in in-scope files is expected and fine — the executor designs against the live code anyway.
@@ -105,13 +105,13 @@ Under delegation, do not fix source directly; turn review findings into REVISE f
 
 Use `REVISE` for concrete, fixable issues. Send specific feedback and the current diff back to the same agent. Allow at most two revision rounds.
 
-Use `BLOCK` for STOP conditions, exhausted revisions, unrecoverable scope violations, or false plan assumptions. Mark `plans/README.md` BLOCKED with a short reason. Do not roll back unless the user asks.
+Use `BLOCK` for STOP conditions, exhausted revisions, unrecoverable scope violations, or false plan assumptions. Mark `wiki/plans/README.md` BLOCKED with a short reason. Do not roll back unless the user asks.
 
 ### 7. Close
 
 On COMPLETE/APPROVE:
 
-1. Update the plan status in `plans/README.md` to DONE.
+1. Update the plan status in `wiki/plans/README.md` to DONE.
 2. Commit that status update.
 
 Report:
@@ -128,20 +128,20 @@ Notes: ...
 
 ## Parallel group execution
 
-When the target is a parallel group from `plans/README.md` (all members' prerequisites DONE), execute the members concurrently. This requires a delegation mode — subagent or local agent; under self-execution run the members serially, since one orchestrator cannot parallelize itself. The serial workflow applies to each member, with these deltas:
+When the target is a parallel group from `wiki/plans/README.md` (all members' prerequisites DONE), execute the members concurrently. This requires a delegation mode — subagent or local agent; under self-execution run the members serially, since one orchestrator cannot parallelize itself. The serial workflow applies to each member, with these deltas:
 
 1. **Isolation**: before dispatch, give each member its own worktree and branch from the shared baseline: `git worktree add <path-outside-repo> -b plan/NNN`. Prefer the host's native worktree isolation for subagents when it exists. For a local agent, pass that member's absolute worktree path to its own `delegate_start` call.
 2. **Preflight once** on the main worktree — clean tree, one baseline SHA for the whole group, drift check per member — then dispatch all members concurrently and retain one run ID per member. Do not commit to the original branch while the group is in flight, except merges from step 5.
 3. **Monitor all agents**. An out-of-scope edit is grounds to kill early in any mode; in a group it also breaks the merge guarantee below.
 4. **Verify serially**, per member in its own worktree, as each finishes: full contract checks and code review, unchanged. REVISE feedback goes to that member's agent, working in that member's worktree. Defer the acceptance step to after merge: project-level verify flows have runtime side effects (ports, databases, dev servers) that are not parallel-safe across worktrees.
 5. **Merge sequentially**, only members that passed verification: merge each member's branch into the original branch, rerun that member's validation commands on the merged result, then run acceptance there — serially, on the main worktree. Disjoint scopes plus the in-scope-only rule make these merges conflict-free by construction — a merge conflict is evidence of a scope violation: treat it as a verification failure and handle via REVISE or BLOCK, never resolve it silently.
-6. **Close per member**: update `plans/README.md`, remove the member's worktree and branch. Because scopes are disjoint, one member's BLOCK does not block merging the others; mark it BLOCKED individually.
+6. **Close per member**: update `wiki/plans/README.md`, remove the member's worktree and branch. Because scopes are disjoint, one member's BLOCK does not block merging the others; mark it BLOCKED individually.
 
 An integration plan that depends on the whole group runs afterward as a normal serial plan. In the final report, list status, evidence, and commits per member, plus the merge order.
 
 ## Stop conditions
 
-- Worktree is dirty before starting, beyond pending `plans/` files (which preflight commits).
+- Worktree is dirty before starting, beyond pending `wiki/plans/` files (which preflight commits).
 - Requested delegated agent is unavailable.
 - Drift breaks a fact cited under the plan’s Decisions & tradeoffs.
 - Work requires out-of-scope files.

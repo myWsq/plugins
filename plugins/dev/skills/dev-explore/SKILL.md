@@ -47,7 +47,7 @@ Classify the request before asking detailed questions:
 - **Pure exploration**: the user wants to understand code, behavior, risks, or validation. Report findings and stop.
 - **Clear, narrow change**: confirm the inferred requirement and relevant constraints, then go straight to the departure check.
 - **Open-ended or behavior-changing request**: explore alternatives and get approval for a direction before `dev-write-plan`.
-- **Plan or design stress-test**: the user has an existing plan (such as `plans/NNN`) or design document and wants it grilled. Read it, verify its claims against the code, then grill through its decisions and assumptions branch by branch. The output is revision notes for `dev-write-plan` or the user, not a new direction.
+- **Plan or design stress-test**: the user has an existing plan (such as `wiki/plans/NNN`) or design document and wants it grilled. Read it, verify its claims against the code, then grill through its decisions and assumptions branch by branch. The output is revision notes for `dev-write-plan` or the user, not a new direction.
 - **Too broad for one plan**: identify independent pieces, explain the split, and recommend the first slice to explore.
 
 Do not let "this seems simple" skip clarification. For simple changes, the approved direction can be one or two sentences.

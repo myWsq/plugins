@@ -1,6 +1,6 @@
 ---
 name: dev-write-plan
-description: Turn a clear development request into a self-contained outcome contract under `plans/` — requirement, decisions, tradeoffs, direction, scope, and acceptance criteria — for dev-execute-plan or another agent to implement. A decomposable requirement may become a plan group (contract plan, parallel members with disjoint scopes, integration plan) whose members execute concurrently. Use when the user asks to plan, design an implementation approach, convert a bug/feature request into an executable plan, or continue after dev-explore. Planning is read-only except for files under `plans/`.
+description: Turn a clear development request into a self-contained outcome contract under `wiki/plans/` — requirement, decisions, tradeoffs, direction, scope, and acceptance criteria — for dev-execute-plan or another agent to implement. A decomposable requirement may become a plan group (contract plan, parallel members with disjoint scopes, integration plan) whose members execute concurrently. Use when the user asks to plan, design an implementation approach, convert a bug/feature request into an executable plan, or continue after dev-explore. Planning is read-only except for files under `wiki/plans/`.
 ---
 
 # dev-write-plan
@@ -12,7 +12,7 @@ A requirement that genuinely decomposes may become a small **plan group** whose 
 
 ## Rules
 
-1. Do not edit source code. Only create or update files under `plans/`.
+1. Do not edit source code. Only create or update files under `wiki/plans/`.
 2. Do not run mutating commands. Read-only search, inspection, checks, and no-emit type checks are allowed.
 3. A plan must be self-contained. Do not rely on “as discussed above”.
 4. Cite secrets only by location and type; never copy secret values.
@@ -48,13 +48,13 @@ plan NNN+3   integration — depends on NNN+1, NNN+2          (serial)
 
 Parallelism is a byproduct of a split that meets the bar, not a goal. Never force a split to manufacture parallelism: a forced split trades visible wall-clock time for deferred merge-conflict and interface-drift costs. If any criterion fails, write one plan.
 
-Group membership lives only in `plans/README.md`; each member stays self-contained and declares just its `Depends on:` edges.
+Group membership lives only in `wiki/plans/README.md`; each member stays self-contained and declares just its `Depends on:` edges.
 
 ### 3. Write the plan
 
 1. Record `git rev-parse --short HEAD`.
-2. Create `plans/NNN-short-slug.md`; continue numbering if `plans/` already exists.
-3. Update `plans/README.md` with execution order, dependencies, and status; when step 2 produced a plan group, mark the group there (members of one group are safe to execute concurrently).
+2. Create `wiki/plans/NNN-short-slug.md`; continue numbering if `wiki/plans/` already exists.
+3. Update `wiki/plans/README.md` with execution order, dependencies, and status; when step 2 produced a plan group, mark the group there (members of one group are safe to execute concurrently).
 4. Write down the **information asymmetry**, not the implementation: decisions the executor cannot re-derive, landmines that are expensive to rediscover, the scope boundary, and the acceptance contract. Do not prescribe function-level edits — the executor designs against the live code, which beats any snapshot. Where exploration found a concrete hazard, record it as a landmine; that is the only place implementation-level detail belongs.
 5. Keep the scope tight and the acceptance checkable: every milestone names an outcome and how to validate it.
 
@@ -68,7 +68,7 @@ Use this structure:
 > yourself against the live code. Run milestone validations as you go only if
 > you are also the verifier — a delegated executor implements only, and
 > verification happens outside its session. Stop on any STOP condition. When
-> complete, update this plan in `plans/README.md`.
+> complete, update this plan in `wiki/plans/README.md`.
 >
 > Drift check: `git diff --stat <planned-sha>..HEAD -- <in-scope paths> <files cited under Decisions & tradeoffs>`
 
@@ -77,7 +77,7 @@ Use this structure:
 - Priority: P1 | P2 | P3
 - Effort: S | M | L
 - Risk: LOW | MED | HIGH
-- Depends on: none | plans/NNN-*.md
+- Depends on: none | wiki/plans/NNN-*.md
 - Category: bug | feature | tests | refactor | docs | dx | migration
 - Execution: subagent[ <model>] | agent:<id>[ <model>] | self — from the departure check; omit the line when the check skipped execution mode (`dev-execute-plan` asks at dispatch time)
 - Planned at: `<short-sha>`, <YYYY-MM-DD>
@@ -147,7 +147,7 @@ row if the project has none.
 - [ ] Required tests exist and assert meaningful behavior.
 - [ ] Implementation follows every entry in Decisions & tradeoffs.
 - [ ] No out-of-scope files changed.
-- [ ] `plans/README.md` status is updated.
+- [ ] `wiki/plans/README.md` status is updated.
 
 ## STOP conditions
 
@@ -163,8 +163,8 @@ What future maintainers or reviewers should watch.
 
 ### 4. Handoff
 
-- After a completed departure check — whether it happened in `dev-explore` or here — do not ask anything: summarize the plan for the record, commit only `plans/`, and start `dev-execute-plan` with the recorded execution mode. For a plan group, hand over the whole group — its concurrent dispatch is defined in `dev-execute-plan`.
-- If the user opted into a review pause at the departure check, stop after writing the plan. Leaving `plans/` uncommitted is fine: `dev-execute-plan` commits pending `plans/` files itself during preflight. When the user comes back, resume directly with the recorded execution mode; do not re-run the departure check unless the review changed the plan's direction.
+- After a completed departure check — whether it happened in `dev-explore` or here — do not ask anything: summarize the plan for the record, commit only `wiki/plans/`, and start `dev-execute-plan` with the recorded execution mode. For a plan group, hand over the whole group — its concurrent dispatch is defined in `dev-execute-plan`.
+- If the user opted into a review pause at the departure check, stop after writing the plan. Leaving `wiki/plans/` uncommitted is fine: `dev-execute-plan` commits pending `wiki/plans/` files itself during preflight. When the user comes back, resume directly with the recorded execution mode; do not re-run the departure check unless the review changed the plan's direction.
 - Only if no departure check ever happened (unusual entry path): ask once — execute now (self-execution or a named agent) or review first — then proceed accordingly.
 
 ## Quality bar
