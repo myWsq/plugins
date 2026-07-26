@@ -1,7 +1,7 @@
 {
   "name": "dev",
-  "version": "0.3.0",
-  "description": "Plan-driven software development with MCP-backed local-agent delegation: set up, explore, plan, execute, and review.",
+  "version": "0.4.0",
+  "description": "Plan-driven software development with MCP-backed local-agent delegation: explore, plan, execute, and review.",
   "author": {
     "name": "Shuaiqi Wang",
     "email": "wsq961@outlook.com",
@@ -21,8 +21,8 @@
   "skills": "./skills/",
   "interface": {
     "displayName": "Dev Skills",
-    "shortDescription": "Set up, explore, plan, delegate, execute, and review software changes.",
-    "longDescription": "Dev packages four plan-driven development skills: dev-setup initializes or aligns a project with the owner's baseline practices, dev-explore maps the codebase and converges on a direction, dev-write-plan turns that direction into an outcome contract under wiki/plans/, and dev-execute-plan implements the plan with MCP-backed delegation to local coding agents before verifying the result.",
+    "shortDescription": "Explore, plan, delegate, execute, and review software changes.",
+    "longDescription": "Dev packages three plan-driven development skills: dev-explore maps the codebase and converges on a direction, dev-write-plan turns that direction into an outcome contract under wiki/plans/, and dev-execute-plan implements the plan with MCP-backed delegation to local coding agents before verifying the result.",
     "developerName": "Shuaiqi Wang",
     "category": "Developer Tools",
     "capabilities": [
@@ -34,8 +34,8 @@
     ],
     "websiteURL": "https://github.com/myWsq/plugins",
     "defaultPrompt": [
-      "Use dev-setup to initialize this project with my baseline practices.",
       "Use dev-explore to understand this codebase and converge on an approach.",
+      "Use dev-write-plan to turn this requirement into an implementation plan.",
       "Use dev-execute-plan to implement a TODO plan and delegate independent work to local agents."
     ],
     "brandColor": "#2563EB"

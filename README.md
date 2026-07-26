@@ -4,8 +4,9 @@ A personal marketplace of reusable skills, MCP integrations, and agent workflows
 
 ## Plugins
 
-- [`dev`](docs/dev.md) — Project setup and plan-driven software development
+- [`dev`](docs/dev.md) — Plan-driven software development: explore, plan, execute, review
 - [`commit`](docs/commit.md) — Commit, PR, and branch cleanup with a fixed safety floor
+- [`arch`](docs/arch.md) — Technology-selection decision frameworks, one skill per domain
 
 ## Claude Code
 

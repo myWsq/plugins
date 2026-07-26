@@ -11,8 +11,8 @@
     {
       "name": "dev",
       "source": "./claude-plugins/dev",
-      "version": "0.3.0",
-      "description": "Plan-driven software development with MCP-backed local-agent delegation: set up, explore, plan, execute, and review.",
+      "version": "0.4.0",
+      "description": "Plan-driven software development with MCP-backed local-agent delegation: explore, plan, execute, and review.",
       "author": {
         "name": "Shuaiqi Wang",
         "email": "wsq961@outlook.com",
@@ -26,6 +26,19 @@
       "source": "./claude-plugins/commit",
       "version": "0.2.0",
       "description": "Git commit, push, and pull-request workflows with a fixed safety floor: stage by name, refuse staged secrets, and never put a commit on the remote default branch.",
+      "author": {
+        "name": "Shuaiqi Wang",
+        "email": "wsq961@outlook.com",
+        "url": "https://github.com/myWsq"
+      },
+      "category": "development",
+      "homepage": "https://github.com/myWsq/plugins"
+    },
+    {
+      "name": "arch",
+      "source": "./claude-plugins/arch",
+      "version": "0.2.0",
+      "description": "The owner's technology-selection knowledge base: decision frameworks with their reasons, one skill per domain.",
       "author": {
         "name": "Shuaiqi Wang",
         "email": "wsq961@outlook.com",

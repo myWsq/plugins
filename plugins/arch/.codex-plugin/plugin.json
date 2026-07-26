@@ -1,0 +1,40 @@
+{
+  "name": "arch",
+  "version": "0.2.0",
+  "description": "The owner's technology-selection knowledge base: decision frameworks with their reasons, one skill per domain.",
+  "author": {
+    "name": "Shuaiqi Wang",
+    "email": "wsq961@outlook.com",
+    "url": "https://github.com/myWsq"
+  },
+  "homepage": "https://github.com/myWsq/plugins",
+  "repository": "https://github.com/myWsq/plugins-builder",
+  "license": "MIT",
+  "keywords": [
+    "architecture",
+    "technology-selection",
+    "monorepo",
+    "web",
+    "project-setup",
+    "skills"
+  ],
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "Arch",
+    "shortDescription": "Technology-selection decision frameworks, one skill per domain.",
+    "longDescription": "Arch sediments the owner's technology-selection judgment as skills — decision frameworks that record how to choose and why, so an agent can apply the settled defaults or deviate for stated cause. arch-monorepo covers repository structure: default to one monorepo per context with pnpm + turborepo, a packages/ + apps/ layout, changesets fixed versioning, and the repository baseline (audience-split docs, wiki/ knowledge base, format/lint floor, and a neutral .agents/skills directory with .claude/skills symlinked to it). arch-web covers frontend web development: React 19 with the React Compiler, SPA-first with Vite and TanStack Router, the astryx design system with StyleX, jotai plus TanStack Query behind custom hooks, manual acceptance instead of test code, and per-project deployment. Further domains such as server land as sibling skills over time.",
+    "developerName": "Shuaiqi Wang",
+    "category": "Developer Tools",
+    "capabilities": [
+      "Skills",
+      "Project Setup"
+    ],
+    "websiteURL": "https://github.com/myWsq/plugins",
+    "defaultPrompt": [
+      "Use arch-monorepo to set up this project with my baseline practices.",
+      "Use arch-monorepo to decide how to structure this repository.",
+      "Use arch-web to pick the stack for this frontend project."
+    ],
+    "brandColor": "#7C3AED"
+  }
+}

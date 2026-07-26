@@ -1,0 +1,21 @@
+{
+  "name": "arch",
+  "version": "0.2.0",
+  "description": "The owner's technology-selection knowledge base: decision frameworks with their reasons, one skill per domain.",
+  "author": {
+    "name": "Shuaiqi Wang",
+    "email": "wsq961@outlook.com",
+    "url": "https://github.com/myWsq"
+  },
+  "homepage": "https://github.com/myWsq/plugins",
+  "repository": "https://github.com/myWsq/plugins-builder",
+  "license": "MIT",
+  "keywords": [
+    "architecture",
+    "technology-selection",
+    "monorepo",
+    "web",
+    "project-setup",
+    "skills"
+  ]
+}

@@ -1,6 +1,6 @@
 # dev
 
-`dev` is a small collection of agent skills for plan-driven software development. It splits a development task into three explicit phases — code exploration, implementation planning, and plan execution — and front-loads every decision that needs a human into the first phase. Once you confirm, the rest of the chain runs to completion without asking again. A fourth skill, `dev-setup`, sits outside the chain: it initializes a new project — or aligns an existing one — with the owner's baseline practices.
+`dev` is a small collection of agent skills for plan-driven software development. It splits a development task into three explicit phases — code exploration, implementation planning, and plan execution — and front-loads every decision that needs a human into the first phase. Once you confirm, the rest of the chain runs to completion without asking again.
 
 The division of labor: the orchestrating agent explores the code, grills the requirement into a converged direction, writes the plan, and reviews the result. The implementation itself is delegated by default to a subagent running on a lower model tier; the bundled MCP broker can list installed local-agent executables and dispatch one asynchronously, and self-execution remains available.
 
@@ -8,7 +8,6 @@ The division of labor: the orchestrating agent explores the code, grills the req
 
 | Skill | Purpose | Output |
 | --- | --- | --- |
-| `dev-setup` | Initialize a new project or align an existing one with the owner's baseline: README.md for humans, AGENTS.md for agents with CLAUDE.md as a one-line pointer, a `wiki/` knowledge base holding specs and plans, MIT LICENSE, a stack-matched .gitignore, and oxfmt + oxlint for TypeScript projects. Sits outside the explore→plan→execute chain. | Baseline files created or aligned, with a report of what changed. |
 | `dev-explore` | Read-only exploration: map the relevant code, grill the requirement question by question until the design holds up, compare approaches, and finish with the departure check — the workflow's single confirmation gate. Can also stress-test an existing plan or design. | A codebase map, resolved decisions, an approved direction, and the chosen execution mode. |
 | `dev-write-plan` | Turn the converged requirement into a self-contained outcome contract — or, when it decomposes safely, a parallel plan group (contract → parallel members → integration). | `wiki/plans/NNN-*.md` plus the `wiki/plans/README.md` index. |
 | `dev-execute-plan` | Execute a plan on the current branch, or a parallel group concurrently in per-plan worktrees — by default dispatching implementation to a lower-tier subagent — then verify every done criterion, review the diff, and merge. | Implementation commits and plan status updates on the current branch. |
@@ -58,9 +57,6 @@ For a **parallel group**, each member is dispatched into its own git worktree an
 ## Example prompts
 
 ```text
-Use dev-setup to initialize this project with my baseline practices.
-Use dev-setup to align this repo with my conventions.
-
 Use dev-explore to understand how authentication works in this repo.
 Use dev-explore to grill me about this refactoring idea before we plan it.
 Use dev-explore to stress-test wiki/plans/003 before we execute it.
