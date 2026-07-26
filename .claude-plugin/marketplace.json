@@ -37,7 +37,7 @@
     {
       "name": "arch",
       "source": "./claude-plugins/arch",
-      "version": "0.2.0",
+      "version": "0.3.1",
       "description": "The owner's technology-selection knowledge base: decision frameworks with their reasons, one skill per domain.",
       "author": {
         "name": "Shuaiqi Wang",

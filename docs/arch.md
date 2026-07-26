@@ -13,6 +13,7 @@ interviewed out and written down.
 | --- | --- | --- |
 | `arch-monorepo` | Repository structure: default to one monorepo per context (pnpm + turborepo, `packages/` + `apps/`, changesets fixed versioning) plus the repository baseline — README.md for humans, AGENTS.md for agents with CLAUDE.md as a one-line pointer, a `wiki/` knowledge base, MIT LICENSE, a stack-matched .gitignore, oxfmt + oxlint for TypeScript, and `.agents/skills/` as the real project-skills directory with `.claude/skills` symlinked to it. | A repository set up or aligned with the framework, with a report of what changed and what was deliberately left alone. |
 | `arch-web` | Frontend web development: React 19 with the React Compiler, SPA-first (SSR only when explicitly required), Vite, TanStack Router, the [astryx](https://github.com/facebook/astryx) design system with StyleX for styling, jotai for cross-page client state, TanStack Query wrapped in custom hooks for request state, no test code (manual acceptance by a human or an agent), and deployment decided per project. | A web stack chosen or aligned with the framework, deviations argued for a stated cause. |
+| `arch-server` | Server-side development: Node by default (Bun only for measured performance needs with compatible dependencies), the [RavenJS](https://github.com/myWsq/RavenJS) framework learned through its `raven-use` skill, REST with a typed TS client generated from the OpenAPI contract feeding arch-web's query hooks, Postgres + Drizzle, E2E black-box tests only — written blind against the contract, run against the real service with real dependencies and no mocks; auth, deployment, and jobs/caching decided per project. | A backend stack chosen or aligned with the framework, deviations argued for a stated cause. |
 
 ## The framework stance
 
@@ -32,6 +33,8 @@ Use arch-monorepo to decide how to structure this repository.
 Use arch-monorepo to align this repo with my conventions.
 Use arch-web to pick the stack for this frontend project.
 Use arch-web to decide whether this app needs SSR.
+Use arch-server to pick the stack for this backend service.
+Use arch-server to decide how to test this API.
 ```
 
 ## License
