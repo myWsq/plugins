@@ -1,0 +1,21 @@
+{
+  "name": "subagent-model",
+  "version": "0.1.0",
+  "description": "Subagent model tiering: pass an explicit model tier chosen by task type and result verifiability instead of inheriting the parent model.",
+  "author": {
+    "name": "Shuaiqi Wang",
+    "email": "wsq961@outlook.com",
+    "url": "https://github.com/myWsq"
+  },
+  "homepage": "https://github.com/myWsq/plugins",
+  "repository": "https://github.com/myWsq/plugins-builder",
+  "license": "MIT",
+  "keywords": [
+    "subagent",
+    "model-selection",
+    "delegation",
+    "cost",
+    "hooks",
+    "skills"
+  ]
+}

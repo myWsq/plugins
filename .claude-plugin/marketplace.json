@@ -46,6 +46,19 @@
       },
       "category": "development",
       "homepage": "https://github.com/myWsq/plugins"
+    },
+    {
+      "name": "subagent-model",
+      "source": "./claude-plugins/subagent-model",
+      "version": "0.1.0",
+      "description": "Subagent model tiering: pass an explicit model tier chosen by task type and result verifiability instead of inheriting the parent model.",
+      "author": {
+        "name": "Shuaiqi Wang",
+        "email": "wsq961@outlook.com",
+        "url": "https://github.com/myWsq"
+      },
+      "category": "development",
+      "homepage": "https://github.com/myWsq/plugins"
     }
   ]
 }

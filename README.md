@@ -7,6 +7,7 @@ A personal marketplace of reusable skills, MCP integrations, and agent workflows
 - [`dev`](docs/dev.md) — Plan-driven software development: explore, plan, execute, review
 - [`commit`](docs/commit.md) — Commit, PR, and branch cleanup with a fixed safety floor
 - [`arch`](docs/arch.md) — Technology-selection decision frameworks, one skill per domain
+- [`subagent-model`](docs/subagent-model.md) — Choose subagent model tiers by task type and verifiability
 
 ## Claude Code
 
