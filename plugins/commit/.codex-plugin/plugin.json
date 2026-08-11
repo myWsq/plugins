@@ -1,7 +1,7 @@
 {
   "name": "commit",
-  "version": "0.2.0",
-  "description": "Git commit, push, and pull-request workflows with a fixed safety floor: stage by name, refuse staged secrets, and never put a commit on the remote default branch.",
+  "version": "0.3.0",
+  "description": "Git commit, push, and pull-request workflows with a fixed safety floor: stage by name, refuse staged secrets, and — in the pull-request flow — never put a commit on the remote default branch.",
   "author": {
     "name": "Shuaiqi Wang",
     "email": "wsq961@outlook.com",
@@ -21,7 +21,7 @@
   "interface": {
     "displayName": "Commit",
     "shortDescription": "Commit, push, and PR flows with a fixed safety floor.",
-    "longDescription": "Commit mirrors the command surface of the official commit-commands plugin with three skills — commit, commit-pr, and commit-clean — sharing one commit flow: stage related changes by name, refuse to commit secrets, and write a message in the repository's existing style that explains why. commit-pr additionally never switches the working tree's branch; when invoked on the default branch it records the commit as a new local ref, pushes that ref, and opens the PR with an explicit head, optionally returning the local default branch to its remote state. commit-clean deletes only local branches whose upstream is marked gone, removing their linked worktrees first.",
+    "longDescription": "Commit mirrors the command surface of the official commit-commands plugin with four skills — commit, commit-push, commit-pr, and commit-clean — sharing one commit flow: stage related changes by name, refuse to commit secrets, and write a message in the repository's existing style that explains why. commit defaults to commit-only. commit-push commits and pushes the branch that is already checked out to its upstream, the default branch included, without opening a pull request. commit-pr never switches the working tree's branch and keeps the commit off the remote default branch; when invoked on the default branch it records the commit as a new local ref, pushes that ref, and opens the PR with an explicit head, optionally returning the local default branch to its remote state. commit-clean deletes only local branches whose upstream is marked gone, removing their linked worktrees first.",
     "developerName": "Shuaiqi Wang",
     "category": "Developer Tools",
     "capabilities": [

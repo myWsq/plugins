@@ -24,8 +24,8 @@
     {
       "name": "commit",
       "source": "./claude-plugins/commit",
-      "version": "0.2.0",
-      "description": "Git commit, push, and pull-request workflows with a fixed safety floor: stage by name, refuse staged secrets, and never put a commit on the remote default branch.",
+      "version": "0.3.0",
+      "description": "Git commit, push, and pull-request workflows with a fixed safety floor: stage by name, refuse staged secrets, and — in the pull-request flow — never put a commit on the remote default branch.",
       "author": {
         "name": "Shuaiqi Wang",
         "email": "wsq961@outlook.com",
