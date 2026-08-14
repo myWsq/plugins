@@ -1,0 +1,39 @@
+{
+  "name": "coflux",
+  "version": "0.1.0",
+  "description": "Report Claude Code activity to the local coflux daemon so the coflux command center shows live per-workspace turn states.",
+  "author": {
+    "name": "Shuaiqi Wang",
+    "email": "wsq961@outlook.com",
+    "url": "https://github.com/myWsq"
+  },
+  "homepage": "https://github.com/myWsq/plugins",
+  "repository": "https://github.com/myWsq/plugins-builder",
+  "license": "MIT",
+  "keywords": [
+    "coflux",
+    "agent-status",
+    "daemon",
+    "hooks",
+    "monitoring",
+    "skills"
+  ],
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "Coflux",
+    "shortDescription": "Report Claude Code activity to the coflux command center.",
+    "longDescription": "Coflux connects Claude Code to the owner's coflux agent command center. The plugin wires the relevant hook events (tool use, permission requests, stop, notifications) to the cofluxd messenger, which forwards only the event name, notification type, session id, and pid to the local daemon — prompts and replies never leave the machine. The daemon maps events to turn states (active / approval / question / done) shown live in the coflux web sidebar, so a human can supervise many parallel agents and see at a glance which workspace is working and which is waiting for them. When cofluxd is not installed the hooks are silent no-ops. A companion skill documents the reporting pipeline and how to diagnose the daemon with cofluxd status, doctor, and logs.",
+    "developerName": "Shuaiqi Wang",
+    "category": "Developer Tools",
+    "capabilities": [
+      "Skills",
+      "Hooks"
+    ],
+    "websiteURL": "https://github.com/myWsq/plugins",
+    "defaultPrompt": [
+      "Use coflux to check why the coflux daemon looks offline.",
+      "Use coflux to explain how workspace activity states are reported."
+    ],
+    "brandColor": "#10B981"
+  }
+}
