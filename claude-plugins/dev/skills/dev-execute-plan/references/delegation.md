@@ -1,12 +1,12 @@
 # Delegation Contract
 
-Use this reference when `dev-execute-plan` delegates implementation — to a subagent of the host environment (preferred), or to a local Codex, Claude Code, or Cursor agent through the bundled `dev-agents` MCP server. Self-execution does not use this path.
+Use this reference when `dev-execute-plan` delegates implementation to a subagent of the host environment. Self-execution does not use this path.
 
-Both channels share the same prompt content, monitoring duty, and REVISE loop. They differ in dispatch and consent: a subagent runs inside the host's permission envelope and needs no extra consent; every local agent runs unattended. Codex and Claude have full device access, while Cursor auto-approves inside its workspace sandbox. The departure check must disclose the selected adapter's reported execution mode before `delegate_start` is used.
+A subagent runs inside the host's existing permission envelope and needs no extra consent.
 
 ## Prompt
 
-Pass the prompt directly to the host subagent task or the MCP `delegate_start` call. Do not create a prompt file in the repository. The broker sends it to the selected process over stdin and does not put it in process arguments or proactively add it to broker events. The delegated agent can still echo prompt content in its own output, so keep secrets out of prompts.
+Pass the prompt directly to the host subagent task. Do not create a prompt file in the repository. The delegated agent can still echo prompt content in its own output, so keep secrets out of prompts.
 
 The prompt contains:
 
@@ -21,46 +21,27 @@ The prompt contains:
 
 ## Dispatch
 
-### Subagent
-
 Dispatch via the host's subagent/task-spawning tool (such as Claude Code's `Agent` tool or an equivalent):
 
 - Pass the full prompt as the subagent's task.
-- Default the model to one tier below the orchestrating model when the host allows model selection; honor a model recorded at the departure check or named by the user.
+- Default the model to one tier below the orchestrating model when the host allows model selection; honor a model recorded at the departure check or named by the user. For a non-Claude model, dispatch a model-pinned executor agent type instead — this plugin ships `gpt-executor` and `kimi-executor` — see the skill's model-choice rules.
+- Before dispatching a model-pinned executor, run the preflight from the skill's model-choice rules: confirm the pinned model ID appears in the relay's `/v1/models` listing; if absent, stop and report — do not dispatch into a silent fallback.
 - Run in the background when the host supports it, so the orchestrator can monitor.
 - The subagent works in the current repository on the current branch, inside the host's existing permission envelope.
 
-### Local agent through `dev-agents`
-
-Discover the MCP server by its `dev-agents` name and tool names; the host-specific fully qualified tool identifier may differ between Claude Code and Codex.
-
-1. Call `agents_list`. Select only an entry whose `id` matches the recorded `agent:<id>` and whose status is `ready`. This is an installation check only; authentication is deliberately left to the real run.
-2. Call `delegate_start` with:
-   - `agent_id`: `codex`, `cursor`, or `claude`;
-   - `prompt`: the complete dispatch prompt;
-   - `cwd`: the absolute Git worktree path;
-   - `model`: only when recorded or named by the user;
-   - `confirmed_unattended: true`, only after the departure check or explicit user request supplied standing consent;
-   - `timeout_ms`: an optional bounded execution timeout in milliseconds.
-3. Record the returned `run_id`. The start call is asynchronous; it does not mean implementation finished.
-
-The broker owns the allowlisted executable, fixed unattended flags, stdin prompt transport, process group, timeout, and output buffer. Do not pass binary paths, raw arguments, environment variables, or permission overrides. Codex and Claude report `full_access: true`; Cursor reports `full_access: false` with `workspace_sandbox_unattended`.
-
-`cwd` must be an absolute Git worktree root. The first successful start pins that broker process to the repository's Git common directory; later starts may use linked worktrees from the same repository only. One broker process permits at most one active writer per worktree, so parallel members need separate worktrees. These checks are scheduling constraints, not a security sandbox or a device-wide lock: another broker process can exist, and full-access Codex or Claude runs can access paths outside `cwd`.
-
 ### Parallel groups
 
-When dispatching a parallel group, each member runs in its own worktree and branch; never start two writers in the same worktree. Call `delegate_start` once per member and retain the member-to-run mapping. The prompt is unchanged — "the current branch" resolves to that member's branch.
+When dispatching a parallel group, each member runs in its own worktree and branch; never start two writers in the same worktree. Dispatch one subagent per member and retain the member-to-task mapping. The prompt is unchanged — "the current branch" resolves to that member's branch.
 
 ## Monitor
 
-For a local agent, call `delegate_get` with its `run_id`, output cursor, and a bounded long-poll interval. Pass each response's `next_after` as the next request's `after`; if `truncated` is true, note that earlier buffered events were evicted and continue from the returned window. Poll through `running`, `canceling`, or `timing_out` until the run reaches `completed`, `failed`, `canceled`, or `timed_out`. Monitor repository changes as well as broker activity. Call `delegate_cancel` if the agent is stuck, clearly off-plan, edits out-of-scope files, or drifts into validation/fix loops. Cancellation is idempotent; continue polling until terminal. In a parallel group, monitor every run independently.
+Monitor through the host-native mechanism, and watch repository changes as well as the subagent's activity. Cancel if the agent is stuck, clearly off-plan, edits out-of-scope files, or drifts into validation/fix loops. In a parallel group, monitor every member independently.
 
-Do not trust the delegated agent’s report as proof. Rerun the plan’s done criteria and run the full code review defined in the skill’s Verify section — the executor made unreviewed design choices, and this review is the only quality gate they pass through. Also run `git status --porcelain` after the agent exits: uncommitted changes do not appear in the baseline diff, so a non-empty status means unverified work.
+Do not trust the delegated agent's report as proof. Rerun the plan's done criteria and run the full code review defined in the skill's Verify section — the executor made unreviewed design choices, and this review is the only quality gate they pass through. Also run `git status --porcelain` after the agent exits: uncommitted changes do not appear in the baseline diff, so a non-empty status means unverified work.
 
 ## Revise
 
-If the host supports continuing a previously spawned subagent with its context intact, send revision feedback to that subagent. A local-agent REVISE is always a fresh `delegate_start` run with the same `agent_id`, worktree, and standing unattended-execution consent; it is stateless, so the prompt must be self-contained.
+If the host supports continuing a previously spawned subagent with its context intact, send revision feedback to that subagent. Otherwise dispatch a fresh subagent; a fresh dispatch is stateless, so the prompt must be self-contained.
 
 For REVISE, dispatch a prompt containing:
 

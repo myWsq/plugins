@@ -1,11 +1,11 @@
 ---
 name: dev-execute-plan
-description: Execute an implementation plan written by dev-write-plan under `wiki/plans/` on the current branch, or a parallel plan group concurrently in per-plan worktrees. Use when the user asks to implement, run, execute, or delegate a plan such as `wiki/plans/001`, `execute 002`, `use codex/cursor/claude for this plan`, `run the next TODO plan`, or `run plans 002 and 003 in parallel`. Prefers a host subagent, supports local agents detected and dispatched through the bundled dev-agents MCP server, and can self-execute before verifying and reviewing the diff.
+description: Execute an implementation plan written by dev-write-plan under `wiki/plans/` on the current branch, or a parallel plan group concurrently in per-plan worktrees. Use when the user asks to implement, run, execute, or delegate a plan such as `wiki/plans/001`, `execute 002`, `run the next TODO plan`, or `run plans 002 and 003 in parallel`. Prefers a host subagent and can self-execute before verifying and reviewing the diff.
 ---
 
 # dev-execute-plan
 
-Execute one plan on the current branch. Delegate implementation to a host subagent (preferred), delegate to a detected local agent through the bundled dev-agents MCP server, or implement it yourself — then verify the result against the plan. When `wiki/plans/README.md` marks a parallel group whose members are all ready, execute the group concurrently — one worktree per member — following "Parallel group execution" below.
+Execute one plan on the current branch. Delegate implementation to a host subagent (preferred) or implement it yourself — then verify the result against the plan. When `wiki/plans/README.md` marks a parallel group whose members are all ready, execute the group concurrently — one worktree per member — following "Parallel group execution" below.
 
 The plan is an outcome contract, not a step-by-step script: the executor designs the implementation against the live code, guided by the plan's Requirement and Decisions & tradeoffs. Quality is therefore enforced at verification — done criteria, scope, and fidelity to recorded decisions — not by matching prescribed edits.
 
@@ -44,25 +44,21 @@ with guessed answers or a plain-text fallback.
 
 This section is the canonical definition of execution modes: upstream departure checks (`dev-explore`, `dev-write-plan`) read it by name to build their question instead of duplicating the wording.
 
-Three modes, in default preference order:
+Two modes, in default preference order:
 
 1. **Subagent delegation (preferred)**: dispatch implementation to a subagent of the current host environment, typically on a model one tier below the orchestrating model. Available whenever the host has a subagent/task-spawning tool (such as Claude Code's `Agent` tool or an equivalent). The subagent runs inside the host's existing permission envelope — no extra consent needed — and keeps the orchestrator's context free for review.
-2. **Local agent delegation**: use the tools exposed by the bundled `dev-agents` MCP server to list and dispatch installed Codex, Claude Code, or Cursor executables. Locate the server by name and its `agents_list` tool; do not hardcode a host-specific full tool identifier. Discovery checks installation only, not login state. Every local-agent run is unattended: Codex uses dangerous bypass and Claude bypasses permissions, both with full device access; Cursor uses YOLO while retaining its workspace sandbox. Choosing this mode is informed consent to the selected adapter's reported execution mode.
-3. **Self-execution**: implement directly. Always available; the fallback when no delegation path exists, or the right choice when implementation genuinely needs the orchestrator's full capability.
+2. **Self-execution**: implement directly. Always available; the fallback when the host has no subagent tool, or the right choice when implementation genuinely needs the orchestrator's full capability.
 
 Selection rules:
 
-1. If a departure check already recorded an execution mode — in the handoff or in the plan's `Execution:` field — use it without asking. The departure check is standing authorization; do not re-confirm. Normalize legacy `codex`, `cursor`, or `claude` values to `agent:codex`, `agent:cursor`, or `agent:claude`.
-2. If the user named a mode in this conversation, use it. For `agent:<id>`, call `agents_list` and require that exact agent to report `ready`; otherwise stop and report its diagnostics and the available modes.
-3. If upstream asked to delegate but did not name a target, use a subagent. If the host has no subagent tool, use the only ready local agent, ask the user if multiple are ready, or self-execute if none.
-4. When no departure check happened and no mode was named, call `agents_list`, then ask one structured question offering subagent delegation (recommended when available), every ready `agent:<id>`, and self-execution. State in the same question that each local agent runs unattended, including its reported execution mode: Codex and Claude have full device access, while Cursor auto-approves inside its workspace sandbox. This answer is the standing consent; do not ask again.
-5. If the `dev-agents` MCP server or its tools are unavailable, local-agent delegation is unavailable. Do not bypass the broker by invoking a CLI or another MCP tool directly.
+1. If a departure check already recorded an execution mode — in the handoff or in the plan's `Execution:` field — use it without asking. The departure check is standing authorization; do not re-confirm. Treat a legacy local-agent value (an `agent:`-prefixed id, or bare `codex`, `cursor`, `claude`) as `subagent`: that channel no longer exists, and a subagent stays inside the host's permission envelope, so no new consent boundary is crossed.
+2. If the user named a mode in this conversation, use it.
+3. If upstream asked to delegate but did not name a target, use a subagent.
+4. When no departure check happened and no mode was named, ask one structured question offering subagent delegation (recommended when available) and self-execution. This answer stands; do not ask again.
 
-If the recorded local agent is now unavailable, stop and report — do not silently fall back. If the recorded mode is `subagent` but the host has no subagent tool, fall back to self-execution and say so in the final report: the same host permission envelope is retained and no new consent boundary is crossed.
+If the recorded mode is `subagent` but the host has no subagent tool, fall back to self-execution and say so in the final report: the same host permission envelope is retained and no new consent boundary is crossed.
 
-`ready` means the executable is installed; it does not assert authentication. If the CLI is logged out or otherwise unusable, the asynchronous run will fail and its diagnostics must be reported without silently switching agents.
-
-Model choice: for a subagent, default to one model tier below the orchestrating model unless the departure check or user named one. For `agent:<id>`, pass a user-requested model to `delegate_start`; otherwise omit it and use that agent's default.
+Model choice: default the subagent to one model tier below the orchestrating model unless the departure check or user named one. The host's runtime model selector accepts Claude tier aliases only. To delegate to a non-Claude model served through the user's API relay, dispatch a model-pinned executor agent type: this plugin ships `gpt-executor` and `kimi-executor`, and the user may define more (for example in `.claude/agents/`) by pinning a full model ID in the frontmatter. Offer this route only when the departure check recorded it or the user asks for it. An unrecognized or blocked model value silently falls back to the inherited model, so preflight before dispatching a model-pinned executor: query `$ANTHROPIC_BASE_URL/v1/models?limit=1000` with the configured credential (`ANTHROPIC_AUTH_TOKEN` or `ANTHROPIC_API_KEY`; never print its value) and confirm the pinned ID is listed. If it is absent, stop and report instead of dispatching. If the endpoint is unavailable, skip the preflight and tell the user to verify which model actually served the run via relay-side logs.
 
 ### 3. Preflight
 
@@ -80,12 +76,12 @@ Self-execution:
 3. Fix once if needed; stop after two consecutive failures.
 4. Commit each validated milestone or logical unit.
 
-Delegation (subagent or local agent):
+Delegation (subagent):
 
 1. Read `references/delegation.md`.
 2. Build the dispatch prompt from: executor preface, full plan text, and the secret/data safety rules.
-3. Subagent: dispatch via the host's subagent tool with that prompt, in the background when supported. Local agent: call `delegate_start` on the `dev-agents` server with the selected agent, prompt, absolute worktree path, optional model, and `confirmed_unattended: true`; retain its `run_id`. The standing consent supplies this field; do not ask the user again for each start or revision.
-4. Monitor a local agent with `delegate_get`, or the host-native mechanism for a subagent. Call `delegate_cancel` immediately if it is clearly off-track, stuck, or changing out-of-scope files.
+3. Dispatch via the host's subagent tool with that prompt, in the background when supported.
+4. Monitor through the host-native mechanism. Cancel immediately if the subagent is clearly off-track, stuck, or changing out-of-scope files.
 
 ### 5. Verify
 
@@ -129,7 +125,7 @@ Report:
 
 ```text
 Status: COMPLETE | STOPPED | APPROVE | REVISE | BLOCK
-Mode: self | subagent(+ model) | agent:<id>(+ model)
+Mode: self | subagent(+ model or executor agent)
 Evidence: validation results, scope check, diff/test review
 Changed files: ...
 Commits: ...
@@ -139,12 +135,12 @@ Notes: ...
 
 ## Parallel group execution
 
-When the target is a parallel group from `wiki/plans/README.md` (all members' prerequisites DONE), execute the members concurrently. This requires a delegation mode — subagent or local agent; under self-execution run the members serially, since one orchestrator cannot parallelize itself. The serial workflow applies to each member, with these deltas:
+When the target is a parallel group from `wiki/plans/README.md` (all members' prerequisites DONE), execute the members concurrently. This requires subagent delegation; under self-execution run the members serially, since one orchestrator cannot parallelize itself. The serial workflow applies to each member, with these deltas:
 
-1. **Isolation**: before dispatch, give each member its own worktree and branch from the shared baseline: `git worktree add <path-outside-repo> -b plan/NNN`. Prefer the host's native worktree isolation for subagents when it exists. For a local agent, pass that member's absolute worktree path to its own `delegate_start` call.
-2. **Preflight once** on the main worktree — clean tree, one baseline SHA for the whole group, drift check per member — then dispatch all members concurrently and retain one run ID per member. Do not commit to the original branch while the group is in flight, except merges from step 5.
-3. **Monitor all agents**. An out-of-scope edit is grounds to kill early in any mode; in a group it also breaks the merge guarantee below.
-4. **Verify serially**, per member in its own worktree, as each finishes: full contract checks and code review, unchanged. REVISE feedback goes to that member's agent, working in that member's worktree. Defer the acceptance step to after merge: project-level verify flows have runtime side effects (ports, databases, dev servers) that are not parallel-safe across worktrees.
+1. **Isolation**: before dispatch, give each member its own worktree and branch from the shared baseline: `git worktree add <path-outside-repo> -b plan/NNN`. Prefer the host's native worktree isolation for subagents when it exists.
+2. **Preflight once** on the main worktree — clean tree, one baseline SHA for the whole group, drift check per member — then dispatch all members concurrently and retain each member's task handle. Do not commit to the original branch while the group is in flight, except merges from step 5.
+3. **Monitor all subagents**. An out-of-scope edit is grounds to kill early in any mode; in a group it also breaks the merge guarantee below.
+4. **Verify serially**, per member in its own worktree, as each finishes: full contract checks and code review, unchanged. REVISE feedback goes to that member's subagent, working in that member's worktree. Defer the acceptance step to after merge: project-level verify flows have runtime side effects (ports, databases, dev servers) that are not parallel-safe across worktrees.
 5. **Merge sequentially**, only members that passed verification: merge each member's branch into the original branch, rerun that member's validation commands on the merged result, then run acceptance there — serially, on the main worktree. Disjoint scopes plus the in-scope-only rule make these merges conflict-free by construction — a merge conflict is evidence of a scope violation: treat it as a verification failure and handle via REVISE or BLOCK, never resolve it silently.
 6. **Close per member**: update `wiki/plans/README.md`, remove the member's worktree and branch. Because scopes are disjoint, one member's BLOCK does not block merging the others; mark it BLOCKED individually.
 
@@ -153,7 +149,7 @@ An integration plan that depends on the whole group runs afterward as a normal s
 ## Stop conditions
 
 - Worktree is dirty before starting, beyond pending `wiki/plans/` files (which preflight commits).
-- Requested delegated agent is unavailable.
+- A requested executor agent definition does not exist in the host.
 - Drift breaks a fact cited under the plan’s Decisions & tradeoffs.
 - Work requires out-of-scope files.
 - Validation fails twice after one reasonable fix.

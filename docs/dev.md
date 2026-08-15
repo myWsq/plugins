@@ -2,7 +2,7 @@
 
 `dev` is a small collection of agent skills for plan-driven software development. It splits a development task into three explicit phases — code exploration, implementation planning, and plan execution — and front-loads every decision that needs a human into the first phase. Once you confirm, the rest of the chain runs to completion without asking again.
 
-The division of labor: the orchestrating agent explores the code, grills the requirement into a converged direction, writes the plan, and reviews the result. The implementation itself is delegated by default to a subagent running on a lower model tier; the bundled MCP broker can list installed local-agent executables and dispatch one asynchronously, and self-execution remains available.
+The division of labor: the orchestrating agent explores the code, grills the requirement into a converged direction, writes the plan, and reviews the result. The implementation itself is delegated by default to a subagent running on a lower model tier; self-execution remains available.
 
 ## Skills
 
@@ -29,7 +29,7 @@ After the departure check, the chain is on autopilot: the plan is committed and 
 Exploration ends with the **departure check**, a single structured question that settles everything at once:
 
 1. **Direction** — final approval of the converged approach.
-2. **Execution mode** — subagent (recommended default), a local agent detected through the bundled MCP broker, or self-execution. Local agents run unattended: Codex and Claude have full device access, while Cursor uses YOLO inside its workspace sandbox. The selected mode is disclosed in the same question, and choosing it is informed consent.
+2. **Execution mode** — subagent (recommended default) or self-execution, plus the subagent's model if you care: a Claude tier alias, or a pre-created executor agent pinned to a non-Claude model served through your API relay.
 3. **Autopilot** — confirmation that the chain now runs to completion unattended. A review pause after the plan is written is available as an explicit opt-in.
 
 ### 2. Plan (`dev-write-plan`)
@@ -40,13 +40,14 @@ When a requirement genuinely decomposes, it may become a **parallel plan group**
 
 ### 3. Execute and review (`dev-execute-plan`)
 
-Three execution modes, in default preference order:
+Two execution modes, in default preference order:
 
 | Mode | When | Notes |
 | --- | --- | --- |
 | Subagent (default) | The host has a subagent/task tool (e.g. Claude Code's `Agent`). | Typically one model tier below the orchestrator; runs inside the host's existing permission envelope, so no extra consent is needed. |
-| Local agent via MCP | Explicitly chosen at the departure check or by the user. | The broker detects and asynchronously dispatches Codex, Cursor, or Claude, with polling and cancellation. Codex and Claude have full device access; Cursor keeps its workspace sandbox. |
 | Self-execution | Fallback when no subagent tool exists, or an explicit choice. | The orchestrator implements directly, committing each validated step. |
+
+The subagent's model is normally a Claude tier alias. To run a non-Claude model served through your API relay, name a model-pinned executor agent at the departure check — the plugin ships `gpt-executor` (gpt-5.6-sol) and `kimi-executor` (kimi-k3), and you can define more in `.claude/agents/` by pinning a full model ID in the frontmatter. Note that an unrecognized or blocked model value silently falls back to the inherited model, so verify which model actually served the run (for example via relay-side logs).
 
 Regardless of mode, the orchestrator verifies the result itself: it re-runs every done criterion, reads the full diff against the recorded baseline, checks that only in-scope files changed and that nothing is left uncommitted, and reviews tests for meaningful assertions. Delegated work that needs fixes goes back to the executor as concrete revision feedback (at most two rounds) before the plan is marked BLOCKED.
 
@@ -66,7 +67,7 @@ Use dev-write-plan to turn this bug report into an implementation plan.
 
 Use dev-execute-plan to implement wiki/plans/001.
 Use dev-execute-plan to execute the next TODO plan.
-Use dev-execute-plan to delegate wiki/plans/002 to codex and review the result.
+Use dev-execute-plan to delegate wiki/plans/002 to a subagent and review the result.
 Use dev-execute-plan to run plans 002 and 003 in parallel.
 ```
 
