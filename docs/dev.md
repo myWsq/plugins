@@ -11,6 +11,9 @@ The division of labor: the orchestrating agent explores the code, grills the req
 | `dev-explore` | Read-only exploration: map the relevant code, grill the requirement question by question until the design holds up, compare approaches, and finish with the departure check — the workflow's single confirmation gate. Can also stress-test an existing plan or design. | A codebase map, resolved decisions, an approved direction, and the chosen execution mode. |
 | `dev-write-plan` | Turn the converged requirement into a self-contained outcome contract — or, when it decomposes safely, a parallel plan group (contract → parallel members → integration). | `wiki/plans/NNN-*.md` plus the `wiki/plans/README.md` index. |
 | `dev-execute-plan` | Execute a plan on the current branch, or a parallel group concurrently in per-plan worktrees — by default dispatching implementation to a lower-tier subagent — then verify every done criterion, review the diff, and merge. | Implementation commits and plan status updates on the current branch. |
+| `subagent-model` | Cross-cutting model-tiering framework: pass an explicit model when spawning a subagent, chosen by task type and result verifiability. | A model-tier decision (or confirmation of the parent tier). |
+
+A SessionStart hook (Claude Code only) injects the model-tiering rule at the start of every session so it applies to each spawn decision without being asked. Consult `subagent-model` when deciding a tier.
 
 The skills can be used independently, but they are designed to run as a chain:
 
@@ -55,6 +58,21 @@ The roles are split deliberately: the delegated executor **implements only** —
 
 For a **parallel group**, each member is dispatched into its own git worktree and branch; the orchestrator verifies each member as it finishes, then merges the passing branches back sequentially. Disjoint scopes make these merges conflict-free by construction — a merge conflict is evidence of a scope violation and is handled as a verification failure, never resolved silently.
 
+## Subagent model tiering
+
+Pass an explicit `model` when spawning a subagent. Tiers, high to low:
+fable > opus > sonnet > haiku.
+
+| Move | When | Examples |
+| --- | --- | --- |
+| Drop two or more tiers | Output is mechanically verifiable or trivially checkable | File retrieval, grep sweeps, enumeration, format conversion, bulk mechanical edits |
+| Drop one tier | Result matters but errors surface quickly | Self-contained small implementations, summaries, routine exploration |
+| Keep the parent tier | Conclusions taken on trust and hard to verify | Design decisions, review verdicts, deep debugging, cross-module implementation |
+
+The judgment key is task type and verifiability, not perceived difficulty.
+When unsure, do not downgrade: a trusted wrong conclusion costs more rework
+than the tokens saved.
+
 ## Example prompts
 
 ```text
@@ -69,6 +87,9 @@ Use dev-execute-plan to implement wiki/plans/001.
 Use dev-execute-plan to execute the next TODO plan.
 Use dev-execute-plan to delegate wiki/plans/002 to a subagent and review the result.
 Use dev-execute-plan to run plans 002 and 003 in parallel.
+
+Use subagent-model to pick the model tier for this subtask.
+Use subagent-model to decide whether this delegation can run on a cheaper tier.
 ```
 
 ## License
