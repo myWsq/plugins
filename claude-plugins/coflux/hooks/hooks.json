@@ -1,6 +1,16 @@
 {
   "description": "Forward Claude Code hook events to the local coflux daemon via the cofluxd messenger. Silent no-op when cofluxd is not installed.",
   "hooks": {
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "sh -c 'command -v cofluxd >/dev/null 2>&1 && exec cofluxd hook claude || :'"
+          }
+        ]
+      }
+    ],
     "PreToolUse": [
       {
         "hooks": [

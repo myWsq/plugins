@@ -16,14 +16,17 @@ time.
 This plugin ships the Claude Code half of the reporting pipeline as hooks: on
 each relevant hook event it runs `cofluxd hook claude`, a messenger that
 forwards the event to the local daemon (`POST /hook` on the loopback gateway).
-The daemon maps events to turn states — tool use means active,
-PermissionRequest means approval, Stop means done, Notification splits by its
-type — and merges the result into the workspace presence shown in the web
-sidebar.
+The daemon maps events to turn states — prompt submission and tool use mean
+active, PermissionRequest means approval, Notification splits by its type, and
+Stop means done only when no background work is still in flight. A turn that
+ends while a background shell, subagent, monitor, or workflow is still running
+is not finished: that work will wake the agent back up, so the state stays
+active. The result merges into the workspace presence shown in the web sidebar.
 
 Privacy boundary: the messenger sends only the event name, the notification
-type, the agent session id, and its own pid. Prompts, replies, and
-notification bodies never leave the machine.
+type, the agent session id, the number of in-flight background tasks, and its
+own pid. Prompts, replies, notification bodies, and background task
+descriptions never leave the machine.
 
 Discipline: the messenger must never disturb the agent. Every failure — daemon
 down, port closed, malformed payload, or `cofluxd` not installed at all — is a

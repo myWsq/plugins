@@ -63,7 +63,7 @@
     {
       "name": "coflux",
       "source": "./claude-plugins/coflux",
-      "version": "0.1.0",
+      "version": "0.2.0",
       "description": "Report Claude Code activity to the local coflux daemon so the coflux command center shows live per-workspace turn states.",
       "author": {
         "name": "Shuaiqi Wang",
