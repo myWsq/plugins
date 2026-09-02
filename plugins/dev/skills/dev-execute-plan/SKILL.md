@@ -1,6 +1,6 @@
 ---
 name: dev-execute-plan
-description: Execute an implementation plan written by dev-write-plan under `wiki/plans/` on the current branch, or a parallel plan group concurrently in per-plan worktrees. Use when the user asks to implement, run, execute, or delegate a plan such as `wiki/plans/001`, `execute 002`, `run the next TODO plan`, or `run plans 002 and 003 in parallel`. Prefers a host subagent and can self-execute before verifying and reviewing the diff.
+description: Execute an implementation plan written by dev-write-plan under `wiki/plans/` on the current branch, or a parallel plan group concurrently in per-plan worktrees. Use when the user asks to implement, run, execute, or delegate a plan such as `wiki/plans/20260821-share-link-claim`, `execute share-link-claim`, `run the next TODO plan`, or `run the two 20260821 plans in parallel` — match a partial name against the plan filenames. Prefers a host subagent and can self-execute before verifying and reviewing the diff.
 ---
 
 # dev-execute-plan
@@ -143,7 +143,7 @@ Notes: ...
 
 When the target is a parallel group from `wiki/plans/README.md` (all members' prerequisites DONE), execute the members concurrently. This requires subagent delegation; under self-execution run the members serially, since one orchestrator cannot parallelize itself. The serial workflow applies to each member, with these deltas:
 
-1. **Isolation**: before dispatch, give each member its own worktree and branch from the shared baseline: `git worktree add <path-outside-repo> -b plan/NNN`. Prefer the host's native worktree isolation for subagents when it exists.
+1. **Isolation**: before dispatch, give each member its own worktree and branch from the shared baseline: `git worktree add <path-outside-repo> -b plan/<plan-id>` (the plan filename without `.md`). Prefer the host's native worktree isolation for subagents when it exists.
 2. **Preflight once** on the main worktree — clean tree, one baseline SHA for the whole group, drift check per member — then dispatch all members concurrently and retain each member's task handle. Do not commit to the original branch while the group is in flight, except merges from step 5.
 3. **Monitor all subagents**. An out-of-scope edit is grounds to kill early in any mode; in a group it also breaks the merge guarantee below.
 4. **Verify serially**, per member in its own worktree, as each finishes: full contract checks and code review, unchanged. REVISE feedback goes to that member's subagent, working in that member's worktree. Defer the acceptance step to after merge: project-level verify flows have runtime side effects (ports, databases, dev servers) that are not parallel-safe across worktrees.

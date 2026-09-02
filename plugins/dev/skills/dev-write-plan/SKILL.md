@@ -51,10 +51,10 @@ Default: one plan for one requirement. Split into a plan group only when the req
 The canonical shape is contract-first:
 
 ```text
-plan NNN     contract: shared types, API schema, stubs      (serial)
-plan NNN+1   module A — depends on NNN                      (parallel group)
-plan NNN+2   module B — depends on NNN                      (parallel group)
-plan NNN+3   integration — depends on NNN+1, NNN+2          (serial)
+20260821-contract      contract: shared types, API schema, stubs   (serial)
+20260821-module-a      module A — depends on contract               (parallel group)
+20260821-module-b      module B — depends on contract               (parallel group)
+20260821-integration   integration — depends on module-a, module-b  (serial)
 ```
 
 Parallelism is a byproduct of a split that meets the bar, not a goal. Never force a split to manufacture parallelism: a forced split trades visible wall-clock time for deferred merge-conflict and interface-drift costs. If any criterion fails, write one plan.
@@ -64,7 +64,7 @@ Group membership lives only in `wiki/plans/README.md`; each member stays self-co
 ### 3. Write the plan
 
 1. Record `git rev-parse --short HEAD`.
-2. Create `wiki/plans/NNN-short-slug.md`; continue numbering if `wiki/plans/` already exists.
+2. Create `wiki/plans/YYYYMMDD-short-slug.md`, the date from `date +%Y%m%d`. Never derive the name by scanning the directory for the next number: that read-modify-write has no mutual exclusion, so concurrent planners collide on the same name. A date plus a distinct slug needs no coordination.
 3. Update `wiki/plans/README.md` with execution order, dependencies, and status; when step 2 produced a plan group, mark the group there (members of one group are safe to execute concurrently).
 4. Write down the **information asymmetry**, not the implementation: decisions the executor cannot re-derive, landmines that are expensive to rediscover, the scope boundary, and the acceptance contract. Do not prescribe function-level edits — the executor designs against the live code, which beats any snapshot. Where exploration found a concrete hazard, record it as a landmine; that is the only place implementation-level detail belongs.
 5. Keep the scope tight and the acceptance checkable: every milestone names an outcome and how to validate it.
@@ -72,7 +72,7 @@ Group membership lives only in `wiki/plans/README.md`; each member stays self-co
 Use this structure:
 
 ```markdown
-# Plan NNN: <outcome-focused title>
+# Plan YYYYMMDD-short-slug: <outcome-focused title>
 
 > This plan is an outcome contract, not a step-by-step script. Understand the
 > requirement and the recorded decisions, then design the implementation
@@ -88,7 +88,7 @@ Use this structure:
 - Priority: P1 | P2 | P3
 - Effort: S | M | L
 - Risk: LOW | MED | HIGH
-- Depends on: none | wiki/plans/NNN-*.md
+- Depends on: none | wiki/plans/YYYYMMDD-*.md
 - Category: bug | feature | tests | refactor | docs | dx | migration
 - Execution: subagent[ <model or executor agent>] | self — from the departure check; omit the line when the check skipped execution mode (`dev-execute-plan` asks at dispatch time)
 - Planned at: `<short-sha>`, <YYYY-MM-DD>

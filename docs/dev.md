@@ -9,9 +9,10 @@ The division of labor: the orchestrating agent explores the code, grills the req
 | Skill | Purpose | Output |
 | --- | --- | --- |
 | `dev-explore` | Read-only exploration: map the relevant code, grill the requirement question by question until the design holds up, compare approaches, and finish with the departure check — the workflow's single confirmation gate. Can also stress-test an existing plan or design. | A codebase map, resolved decisions, an approved direction, and the chosen execution mode. |
-| `dev-write-plan` | Turn the converged requirement into a self-contained outcome contract — or, when it decomposes safely, a parallel plan group (contract → parallel members → integration). | `wiki/plans/NNN-*.md` plus the `wiki/plans/README.md` index. |
+| `dev-write-plan` | Turn the converged requirement into a self-contained outcome contract — or, when it decomposes safely, a parallel plan group (contract → parallel members → integration). | `wiki/plans/YYYYMMDD-*.md` plus the `wiki/plans/README.md` index. |
 | `dev-execute-plan` | Execute a plan on the current branch, or a parallel group concurrently in per-plan worktrees — by default dispatching implementation to a lower-tier subagent — then verify every done criterion, review the diff, and merge. | Implementation commits and plan status updates on the current branch. |
 | `subagent-model` | Cross-cutting model-tiering framework: pass an explicit model when spawning a subagent, chosen by task type and result verifiability. | A model-tier decision (or confirmation of the parent tier). |
+| `dev-advisor` | Consult the `advisor` subagent — a top-tier reviewer reading with fresh context — before committing to an approach, when stuck, or before declaring work done. | Review findings and a direction to keep or change. It reviews; it does not implement. |
 
 A SessionStart hook (Claude Code only) injects the model-tiering rule at the start of every session so it applies to each spawn decision without being asked. Consult `subagent-model` when deciding a tier.
 
@@ -73,6 +74,30 @@ The judgment key is task type and verifiability, not perceived difficulty.
 When unsure, do not downgrade: a trusted wrong conclusion costs more rework
 than the tokens saved.
 
+## Second opinion
+
+`dev-advisor` (Claude Code only — Codex has no subagent mechanism) dispatches
+the `advisor` subagent: `fable`, pinned in the agent's frontmatter, instructed
+to review rather than implement. It reads the repository, runs read-only
+commands such as `git diff` and non-mutating checks, and answers. Dispatch it
+without a `model` argument — a per-invocation override replaces the pinned tier.
+
+Its leverage is not only the tier. It arrives with fresh context, reads the code
+itself instead of trusting your account of it, and is asked for a verdict rather
+than a diff — so what comes back is a judgment you act on, not work you have to
+review.
+
+Call it before substantive work — before writing, before committing to an
+interpretation — and again before declaring the work done. Orientation first is
+fine; orientation is not substantive work. On short reactive tasks, one call is
+usually enough: its value is highest before the approach crystallizes.
+
+The advisor does not inherit the conversation. State the problem, the
+constraints, and the specific question, and point at the code rather than
+summarizing it — it reads the files itself. When its advice contradicts data
+you already retrieved, do not switch silently: name the conflict in one more
+call and let the tie be broken on evidence.
+
 ## Example prompts
 
 ```text
@@ -90,6 +115,10 @@ Use dev-execute-plan to run plans 002 and 003 in parallel.
 
 Use subagent-model to pick the model tier for this subtask.
 Use subagent-model to decide whether this delegation can run on a cheaper tier.
+
+Use dev-advisor to get a second opinion before I commit to this approach.
+Use dev-advisor to check this design — I keep hitting the same error.
+Use dev-advisor to review what I just finished before we call it done.
 ```
 
 ## License
