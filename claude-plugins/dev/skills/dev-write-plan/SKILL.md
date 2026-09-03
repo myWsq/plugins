@@ -23,10 +23,10 @@ A requirement that genuinely decomposes may become a small **plan group** whose 
 
 ### 1. Establish context
 
-- If continuing from `dev-explore`, reuse the explored terrain, clarified requirement, and departure-check answers. The grilling and all confirmations already happened there: do not re-interrogate settled decisions and do not re-confirm anything.
+- If continuing from `dev-explore`, reuse the explored terrain, clarified requirement, the product conclusions when the change is perceptible to its consumer, and departure-check answers. The grilling and all confirmations already happened there: do not re-interrogate settled decisions and do not re-confirm anything.
 - If starting from a direct request, do lightweight recon: docs, root config, CI, relevant files, exact validation commands, and local conventions.
 - For direct requests, clarify remaining open decisions following the same grill-by-default convention as `dev-explore` (code-answerable questions answered from code, the rest one at a time with a recommended answer; honor "don't grill me"), then finish with `dev-explore`'s departure check — direction, execution mode, autopilot or review pause — so nothing needs confirmation later. For the execution-mode item, ask the execution-mode question defined in the installed `dev-execute-plan` skill's "Choose execution mode" section (the canonical definition); if that skill cannot be located, omit the item — `dev-execute-plan` asks at dispatch time.
-- If clarification uncovers a genuinely open-ended design space, switch to `dev-explore` to converge on a direction before writing the plan.
+- If clarification uncovers a genuinely open-ended design space, switch to `dev-explore` to converge on a direction before writing the plan. Switch likewise when the request is perceptible to its consumer — it changes what they see or do — and no product conclusions (interaction flow, states, UI structure, scope) have been settled: `dev-explore` clarifies the product before the design, and this skill does not repeat that stage.
 - If planning itself surfaces a new decision: when minor, decide it yourself following the approved direction and local conventions, and record it under Decisions & tradeoffs marked `(decided while planning)`; when it contradicts the approved direction or the code's current state, stop and report instead of guessing or re-asking piecemeal.
 
 ### 2. Decompose only when it pays
@@ -85,7 +85,11 @@ Use this structure:
 ## Requirement
 
 The problem, its impact, and what is true once this is done — written so the
-executor can tell a correct solution from an adjacent wrong one.
+executor can tell a correct solution from an adjacent wrong one. For a change
+its consumer can perceive, this section also carries the product conclusions
+settled in exploration: the interaction flow, the states, the UI structure,
+the scope cut, and what the consumer can observe when done. They live in the
+plan, not in a separate artifact.
 
 ## Decisions & tradeoffs
 

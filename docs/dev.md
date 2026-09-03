@@ -1,14 +1,14 @@
 # dev
 
-`dev` is a small collection of agent skills for plan-driven software development. It splits a development task into three explicit phases — code exploration, implementation planning, and plan execution — and front-loads every decision that needs a human into the first phase. Once you confirm, the rest of the chain runs to completion without asking again.
+`dev` is a small collection of agent skills for plan-driven software development. It splits a development task into three explicit phases — exploration (the product behaviour first when the change is perceptible, then the code), implementation planning, and plan execution — and front-loads every decision that needs a human into the first phase. Once you confirm, the rest of the chain runs to completion without asking again.
 
-The division of labor: the orchestrating agent explores the code, grills the requirement into a converged direction, writes the plan, and reviews the result. The implementation itself is delegated by default to the `claude-executor` subagent, whose Claude tier is pinned in its frontmatter; self-execution remains available.
+The division of labor: the orchestrating agent clarifies what the consumer of the change will see and do, explores the code, grills the requirement into a converged direction, writes the plan, and reviews the result. The implementation itself is delegated by default to the `claude-executor` subagent, whose Claude tier is pinned in its frontmatter; self-execution remains available.
 
 ## Skills
 
 | Skill | Purpose | Output |
 | --- | --- | --- |
-| `dev-explore` | Read-only exploration: map the relevant code, grill the requirement question by question until the design holds up, compare approaches, and finish with the departure check — the workflow's single confirmation gate. Can also stress-test an existing plan or design. | A codebase map, resolved decisions, an approved direction, and the chosen execution mode. |
+| `dev-explore` | Read-only exploration: for a change its consumer can perceive, clarify the product first — interaction flow, states, UI structure, scope — from the product surface and confirm it; then map the relevant code, grill the technical design question by question until it holds up, compare approaches, and finish with the departure check — the workflow's last confirmation gate. Can also stress-test an existing plan or design. | Product conclusions when the change is perceptible, a codebase map, resolved decisions, an approved direction, and the chosen execution mode. |
 | `dev-write-plan` | Turn the converged requirement into a self-contained outcome contract — or, when it decomposes safely, a parallel plan group (contract → parallel members → integration). | `wiki/plans/YYYYMMDD-*.md` plus the `wiki/plans/README.md` index. |
 | `dev-execute-plan` | Execute a plan on the current branch, or a parallel group concurrently in per-plan worktrees — by default dispatching implementation to the `claude-executor` subagent — then verify every done criterion, review the diff, and merge. | Implementation commits and plan status updates on the current branch. |
 | `dev-advisor` | Consult the `advisor` subagent — a top-tier reviewer reading with fresh context — before committing to an approach, when stuck, or before declaring work done. | Review findings and a direction to keep or change. It reviews; it does not implement. |
@@ -25,7 +25,9 @@ After the departure check, the chain is on autopilot: the plan is committed and 
 
 ### 1. Explore and grill (`dev-explore`)
 
-`dev-explore` reads the relevant code, validation commands, and conventions without modifying anything. For a proposed change, it clarifies by **grilling by default**: it walks down each branch of the design decision tree, asking one question at a time with a recommended answer, and answering from the codebase instead of asking whenever it can. Say "don't grill me" to switch to minimal questioning. It can also stress-test an existing plan or design document, producing revision notes instead of a new direction.
+`dev-explore` modifies nothing. It triages the request first, and for a change its consumer can perceive — a page, a flow, copy, a CLI command or its output, the shape of an API call — it **clarifies the product before reading the implementation**: it looks only at the product surface the consumer already sees, grills the consumer and trigger, product form, interaction flow, structure-level UI (layout, components, the empty/loading/error/success states, key copy), scope, and consumer-visible acceptance, then asks one structured confirmation. Visual design stays with the project's design system. Internal changes — bug fixes, refactors, infrastructure, performance — skip this stage.
+
+Then it reads the relevant code, validation commands, and conventions, and clarifies the design by **grilling by default**: it walks down each branch of the technical decision tree, asking one question at a time with a recommended answer, answering from the codebase instead of asking whenever it can, and treating the confirmed product conclusions as settled. Say "don't grill me" to switch to minimal questioning. It can also stress-test an existing plan or design document, producing revision notes instead of a new direction.
 
 Exploration ends with the **departure check**, a single structured question that settles everything at once:
 
@@ -35,7 +37,7 @@ Exploration ends with the **departure check**, a single structured question that
 
 ### 2. Plan (`dev-write-plan`)
 
-`dev-write-plan` writes one plan per requirement under `wiki/plans/` as an **outcome contract**: the requirement, the settled decisions with their tradeoffs, landmines, a scope boundary, validation commands, done criteria, stop conditions, and an `Execution:` field carrying the mode chosen at the departure check — leaving implementation design to the executor. It never edits source code and never re-asks settled decisions; minor decisions that surface during planning are made following the approved direction and recorded in the plan.
+`dev-write-plan` writes one plan per requirement under `wiki/plans/` as an **outcome contract**: the requirement — carrying the product conclusions when the change is perceptible — the settled decisions with their tradeoffs, landmines, a scope boundary, validation commands, done criteria, stop conditions, and an `Execution:` field carrying the mode chosen at the departure check — leaving implementation design to the executor. It never edits source code and never re-asks settled decisions; minor decisions that surface during planning are made following the approved direction and recorded in the plan.
 
 When a requirement genuinely decomposes, it may become a **parallel plan group** instead of one plan — but only if the split passes all three parallel-safety criteria: disjoint scopes (shared surfaces such as manifests, route registration, and migrations go to a serial contract plan), a frozen contract between the members, and enough implementation bulk per member to outweigh the merge and review overhead. The canonical shape is contract plan → parallel members → integration plan. Parallelism is a byproduct of a split that meets the bar, not a goal.
 
