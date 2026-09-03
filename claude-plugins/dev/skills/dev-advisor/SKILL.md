@@ -10,8 +10,8 @@ context, reads the code itself rather than your account of it, and answers
 without touching the workspace. It advises; you keep doing the work.
 
 Do not pass a `model` when dispatching. The agent pins its own tier in
-frontmatter, and a per-invocation override silently replaces it — including the
-explicit tier the session-start model-tiering rule asks you to pass.
+frontmatter, and a per-invocation override silently replaces it — an advisor
+running below the model it reviews is worse than no advisor.
 
 ## When to call
 

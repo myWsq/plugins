@@ -24,8 +24,8 @@ The prompt contains:
 Dispatch via the host's subagent/task-spawning tool (such as Claude Code's `Agent` tool or an equivalent):
 
 - Pass the full prompt as the subagent's task.
-- Pass the tier the skill's model-choice rules picked (usually recorded at the departure check); honor a model named by the user. For a non-Claude model, dispatch a model-pinned executor agent type instead — this plugin ships one per relay vendor, named `<vendor>-executor` — see the skill's model-choice rules. Dispatch that agent with no `model` argument: a per-invocation override silently replaces the pinned model ID.
-- Before dispatching a model-pinned executor, run the preflight from the skill's model-choice rules: confirm the pinned model ID appears in the relay's `/v1/models` listing; if absent, stop and report — do not dispatch into a silent fallback.
+- Dispatch the executor agent the execution mode names — `claude-executor` by default — with no `model` argument: a per-invocation override silently replaces the pinned model. When the recorded mode names a Claude tier alias instead, dispatch the host's generic subagent with that `model`. For a non-Claude model the target is a model-pinned executor agent type — this plugin ships one per relay vendor, named `<vendor>-executor` — see the skill's model-choice rules.
+- Before dispatching a relay-pinned executor (not `claude-executor`), run the preflight from the skill's model-choice rules: confirm the pinned model ID appears in the relay's `/v1/models` listing; if absent, stop and report — do not dispatch into a silent fallback.
 - Run in the background when the host supports it, so the orchestrator can monitor.
 - The subagent works in the current repository on the current branch, inside the host's existing permission envelope.
 

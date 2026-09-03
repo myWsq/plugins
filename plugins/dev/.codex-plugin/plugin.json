@@ -1,6 +1,6 @@
 {
   "name": "dev",
-  "version": "0.10.0",
+  "version": "0.11.0",
   "description": "Plan-driven software development with subagent delegation: explore, plan, execute, and review.",
   "author": {
     "name": "Shuaiqi Wang",
@@ -15,22 +15,20 @@
     "planning",
     "skills",
     "code-review",
-    "agent-delegation",
-    "model-selection"
+    "agent-delegation"
   ],
   "skills": "./skills/",
   "interface": {
     "displayName": "Dev Skills",
     "shortDescription": "Explore, plan, delegate, execute, and review software changes.",
-    "longDescription": "Dev packages five skills: the three plan-driven development skills, a cross-cutting model-tiering framework, and a second-opinion advisor. dev-explore maps the codebase and converges on a direction, dev-write-plan turns that direction into an outcome contract under wiki/plans/, and dev-execute-plan implements the plan — delegating implementation to a host subagent by default — before verifying the result. subagent-model injects the owner's model-tiering rule at session start (Claude Code only) and ships it as a consultable skill: mechanically verifiable work drops two or more tiers, self-contained work drops one, and trusted-conclusion work keeps the parent tier. dev-advisor (Claude Code only) consults a read-only advisor subagent pinned to the top tier, reading the repository with fresh context, before an approach hardens or work is declared done.",
+    "longDescription": "Dev packages four skills: the three plan-driven development skills plus a second-opinion advisor. dev-explore maps the codebase and converges on a direction, dev-write-plan turns that direction into an outcome contract under wiki/plans/, and dev-execute-plan implements the plan — delegating implementation to a host subagent by default — before verifying the result. dev-advisor (Claude Code only) consults a read-only advisor subagent pinned to the top tier, reading the repository with fresh context, before an approach hardens or work is declared done.",
     "developerName": "Shuaiqi Wang",
     "category": "Developer Tools",
     "capabilities": [
       "Skills",
       "Planning",
       "Code Review",
-      "Subagent Delegation",
-      "Hooks"
+      "Subagent Delegation"
     ],
     "websiteURL": "https://github.com/myWsq/plugins",
     "defaultPrompt": [
