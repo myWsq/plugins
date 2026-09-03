@@ -2,7 +2,7 @@
 
 `dev` is a small collection of agent skills for plan-driven software development. It splits a development task into three explicit phases — exploration (the product behaviour first when the change is perceptible, then the code), implementation planning, and plan execution — and front-loads every decision that needs a human into the first phase. Once you confirm, the rest of the chain runs to completion without asking again.
 
-The division of labor: the orchestrating agent clarifies what the consumer of the change will see and do, explores the code, grills the requirement into a converged direction, writes the plan, and reviews the result. The implementation itself is delegated by default to the `claude-executor` subagent, whose Claude tier is pinned in its frontmatter; self-execution remains available.
+The division of labor: the orchestrating agent clarifies what the consumer of the change will see and do, explores the code, grills the requirement into a converged direction, writes the plan, and reviews the result. The implementation itself is delegated by default to a host subagent on the `opus` tier; self-execution remains available.
 
 ## Skills
 
@@ -10,8 +10,8 @@ The division of labor: the orchestrating agent clarifies what the consumer of th
 | --- | --- | --- |
 | `dev-explore` | Read-only exploration: for a change its consumer can perceive, clarify the product first — interaction flow, states, UI structure, scope — from the product surface and confirm it; then map the relevant code, grill the technical design question by question until it holds up, compare approaches, and finish with the departure check — the workflow's last confirmation gate. Can also stress-test an existing plan or design. | Product conclusions when the change is perceptible, a codebase map, resolved decisions, an approved direction, and the chosen execution mode. |
 | `dev-write-plan` | Turn the converged requirement into a self-contained outcome contract — or, when it decomposes safely, a parallel plan group (contract → parallel members → integration). | `wiki/plans/YYYYMMDD-*.md` plus the `wiki/plans/README.md` index. |
-| `dev-execute-plan` | Execute a plan on the current branch, or a parallel group concurrently in per-plan worktrees — by default dispatching implementation to the `claude-executor` subagent — then verify every done criterion, review the diff, and merge. | Implementation commits and plan status updates on the current branch. |
-| `dev-advisor` | Consult the `advisor` subagent — a top-tier reviewer reading with fresh context — before committing to an approach, when stuck, or before declaring work done. | Review findings and a direction to keep or change. It reviews; it does not implement. |
+| `dev-execute-plan` | Execute a plan on the current branch, or a parallel group concurrently in per-plan worktrees — by default dispatching implementation to a host subagent on the `opus` tier — then verify every done criterion, review the diff, and merge. | Implementation commits and plan status updates on the current branch. |
+| `dev-advisor` | Brief a top-tier subagent as a read-only advisor reading with fresh context, before committing to an approach, when stuck, or before declaring work done. | Review findings and a direction to keep or change. It reviews; it does not implement. |
 
 The skills can be used independently, but they are designed to run as a chain:
 
@@ -27,12 +27,12 @@ After the departure check, the chain is on autopilot: the plan is committed and 
 
 `dev-explore` modifies nothing. It triages the request first, and for a change its consumer can perceive — a page, a flow, copy, a CLI command or its output, the shape of an API call — it **clarifies the product before reading the implementation**: it looks only at the product surface the consumer already sees, grills the consumer and trigger, product form, interaction flow, structure-level UI (layout, components, the empty/loading/error/success states, key copy), scope, and consumer-visible acceptance, then asks one structured confirmation. Visual design stays with the project's design system. Internal changes — bug fixes, refactors, infrastructure, performance — skip this stage.
 
-Then it reads the relevant code, validation commands, and conventions, and clarifies the design by **grilling by default**: it walks down each branch of the technical decision tree, asking one question at a time with a recommended answer, answering from the codebase instead of asking whenever it can, and treating the confirmed product conclusions as settled. Say "don't grill me" to switch to minimal questioning. It can also stress-test an existing plan or design document, producing revision notes instead of a new direction.
+Then it reads the relevant code, validation commands, and conventions, and clarifies the design by **grilling by default**: it settles only the decisions worth settling before code is written — those expensive to reverse, or where a competent implementer could reasonably go another way — asking one question at a time with a recommended answer, answering from the codebase instead of asking whenever it can, and treating the confirmed product conclusions as settled. Approaches are compared only where a real fork exists. The direction is stated as short as the risk allows, at the altitude of boundaries and contracts rather than edits, and names what is left to the executor. Say "don't grill me" to switch to minimal questioning. It can also stress-test an existing plan or design document, producing revision notes instead of a new direction.
 
 Exploration ends with the **departure check**, a single structured question that settles everything at once:
 
 1. **Direction** — final approval of the converged approach.
-2. **Execution mode** — one of three: subagent (opus), the default `claude-executor`; subagent (others), an executor agent pinned to a non-Claude model served through your API relay; or self.
+2. **Execution mode** — one of three: subagent (opus), the default; subagent (others), an executor agent pinned to a non-Claude model served through your API relay; or self.
 3. **Autopilot** — confirmation that the chain now runs to completion unattended. A review pause after the plan is written is available as an explicit opt-in.
 
 ### 2. Plan (`dev-write-plan`)
@@ -47,10 +47,10 @@ Two execution modes, in default preference order:
 
 | Mode | When | Notes |
 | --- | --- | --- |
-| Subagent (default) | The host has a subagent/task tool (e.g. Claude Code's `Agent`). | Dispatches the `claude-executor` agent, whose Claude tier is pinned in its frontmatter; runs inside the host's existing permission envelope, so no extra consent is needed. |
+| Subagent (default) | The host has a subagent/task tool (e.g. Claude Code's `Agent`). | Dispatches the host's generic subagent with `model: opus`; runs inside the host's existing permission envelope, so no extra consent is needed. |
 | Self-execution | Fallback when no subagent tool exists, or an explicit choice. | The orchestrator implements directly, committing each validated step. |
 
-The default subagent is `claude-executor`, pinned to a Claude tier alias. To run a non-Claude model served through your API relay, name a model-pinned executor agent at the departure check — the plugin ships one executor per relay vendor, named `<vendor>-executor`, each pinning a full model ID in its frontmatter. The agent files under `agents/` are the source of truth for which model each one runs — read the ID there rather than trusting any list in the docs, since relay model IDs move. You can define more the same way in `.claude/agents/`. Note that an unrecognized or blocked model value silently falls back to the inherited model, so verify which model actually served the run (for example via relay-side logs).
+The default subagent is the host's generic one on the `opus` tier. To run a non-Claude model served through your API relay, name a model-pinned executor agent at the departure check — the plugin ships one executor per relay vendor, named `<vendor>-executor`, each pinning a full model ID in its frontmatter. The agent files under `agents/` are the source of truth for which model each one runs — read the ID there rather than trusting any list in the docs, since relay model IDs move. You can define more the same way in `.claude/agents/`. Note that an unrecognized or blocked model value silently falls back to the inherited model, so verify which model actually served the run (for example via relay-side logs).
 
 Regardless of mode, the orchestrator verifies the result itself: it re-runs every done criterion, reads the full diff against the recorded baseline, checks that only in-scope files changed and that nothing is left uncommitted, and reviews tests for meaningful assertions. Delegated work that needs fixes goes back to the executor as concrete revision feedback (at most two rounds) before the plan is marked BLOCKED.
 
@@ -61,10 +61,15 @@ For a **parallel group**, each member is dispatched into its own git worktree an
 ## Second opinion
 
 `dev-advisor` (Claude Code only — Codex has no subagent mechanism) dispatches
-the `advisor` subagent: `fable`, pinned in the agent's frontmatter, instructed
-to review rather than implement. It reads the repository, runs read-only
-commands such as `git diff` and non-mutating checks, and answers. Dispatch it
-without a `model` argument — a per-invocation override replaces the pinned tier.
+the host's generic subagent on the top Claude tier (`fable`) and briefs it as
+an advisor: review rather than implement, read the repository and run
+read-only commands such as `git diff` and non-mutating checks, answer. There
+is no advisor agent definition and no prompt template — the skill states the
+principles every brief must carry (the role, the read-only boundary, the shape
+of a useful answer), and the orchestrator writes each brief in its own words.
+Pass the tier explicitly: a subagent dispatched without a `model` inherits the
+orchestrator's, and an advisor at or below the model it reviews is worse than
+none.
 
 Its leverage is not only the tier. It arrives with fresh context, reads the code
 itself instead of trusting your account of it, and is asked for a verdict rather

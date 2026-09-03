@@ -62,7 +62,7 @@ Read enough to understand the relevant terrain:
 
 ### 4. Clarify the design (grill by default)
 
-If the user has a proposed change, interview them relentlessly about every aspect of it until you reach a shared understanding. Walk down each branch of the design tree, resolving dependencies between decisions one by one. For each question, provide your recommended answer. For a perceptible change, the product conclusions confirmed in step 2 are settled input: grill the technical decisions only.
+If the user has a proposed change, grill the technical decisions until the direction holds up — but settle only the decisions worth settling before code is written. Design to the depth the risk demands and no deeper: a decision belongs here when reversing it later would be expensive, or when a competent implementer working from the live code and conventions could reasonably choose differently and the difference matters. Everything else is the executor's call, and the direction says so explicitly. Resolve dependencies between the decisions you do settle one by one, and give each question your recommended answer. For a perceptible change, the product conclusions confirmed in step 2 are settled input: grill the technical decisions only.
 
 Ask the questions one at a time, waiting for feedback on each question before continuing. Asking multiple questions at once is bewildering. If a question can be answered by exploring the codebase, explore the codebase instead.
 
@@ -72,33 +72,21 @@ Prefer the environment's structured user-question tool (`AskUserQuestion`, `requ
 
 Grilling adapted from [mattpocock/skills](https://github.com/mattpocock/skills/blob/main/skills/productivity/grilling/SKILL.md).
 
-### 5. Compare approaches
+### 5. Converge on the direction
 
-For open-ended or behavior-changing requests, propose 2-3 approaches before planning:
+Compare approaches only where a real fork exists — where the code and conventions leave more than one sane path and the choice matters. Then lead with the recommended one and why, with practical trade-offs rather than generic pros and cons, scoped to the current goal and following existing project patterns unless there is a concrete reason to change them. Where there is one sane path, say so and move on; do not manufacture alternatives.
 
-- lead with the recommended approach and why;
-- include practical trade-offs, not generic pros/cons;
-- keep options scoped to the current goal and avoid unrelated refactors;
-- follow existing project patterns unless there is a concrete reason to change them.
-
-When presenting the recommended direction, scale the detail to the risk. Cover only the relevant parts of architecture, affected files or boundaries, data flow or API behavior, error handling, migration or compatibility concerns, and testing.
+State the direction the way an experienced architect would: as short as the risk allows — one sentence for a narrow change, a few decisions for a feature, a picture of the boundaries only when the change reshapes them. Each settled decision sits at the altitude of the invariant, boundary, or contract it fixes, worded precisely enough that the rejected alternative is excluded, never as the edit that implements it. Name what is deliberately left to the executor, so an omission cannot be mistaken for a gap.
 
 Converge on the direction in chat; if the user disagrees, revise and continue the discussion. Final approval happens once, in the departure check.
 
 ### 6. Report
 
-Report:
+Report what the next step needs and nothing more.
 
-- relevant files and their roles;
-- exact validation commands;
-- important conventions with `file:line` examples;
-- existing design decisions;
-- risks, gaps, and broken validation baselines;
-- product conclusions for a perceptible change: interaction flow, states, UI structure, scope, and consumer-visible acceptance;
-- clarified requirement wording and decisions resolved during grilling, if applicable;
-- compared approaches and the recommended direction, if applicable;
-- approved direction and remaining open decisions, if applicable;
-- for a plan stress-test: revision notes keyed to the plan's sections, and whether the plan is safe to execute as written.
+- For pure exploration, that is what the user asked — typically the relevant files and their roles, exact validation commands, conventions with `file:line` examples, existing design decisions, and risks, gaps, or broken validation baselines.
+- For a proposed change, it is what `dev-write-plan` will have to write down and cannot derive: the product conclusions for a perceptible change, the clarified requirement, the settled decisions with their evidence, what is left to the executor, landmines, scope, and validation commands.
+- For a plan stress-test: revision notes keyed to the plan's sections, and whether the plan is safe to execute as written.
 
 For pure exploration, stop after the report. For a proposed change, run the departure check once the direction is clear enough for planning.
 
