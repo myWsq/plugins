@@ -25,7 +25,7 @@ The plan is an outcome contract, not a step-by-step script: the executor designs
 
 ### 1. Locate and read the plan
 
-- Use the user-provided number/path, or pick the next TODO plan from `wiki/plans/README.md`.
+- Use the user-provided plan id or path, or pick the next TODO plan from `wiki/plans/README.md`.
 - Read the full plan and any listed prerequisite plans. Note the plan's `Execution:` field if present — it records the mode chosen at the departure check.
 - Stop if a prerequisite is not DONE.
 

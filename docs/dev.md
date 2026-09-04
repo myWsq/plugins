@@ -27,7 +27,7 @@ After the departure check, the chain is on autopilot: the plan is committed and 
 
 `dev-explore` modifies nothing. It triages the request first, and for a change its consumer can perceive — a page, a flow, copy, a CLI command or its output, the shape of an API call — it **clarifies the product before reading the implementation**: it looks only at the product surface the consumer already sees, grills the consumer and trigger, product form, interaction flow, structure-level UI (layout, components, the empty/loading/error/success states, key copy), scope, and consumer-visible acceptance, then asks one structured confirmation. Visual design stays with the project's design system. Internal changes — bug fixes, refactors, infrastructure, performance — skip this stage.
 
-Then it reads the relevant code, validation commands, and conventions, and clarifies the design by **grilling by default**: it settles only the decisions worth settling before code is written — those expensive to reverse, or where a competent implementer could reasonably go another way — asking one question at a time with a recommended answer, answering from the codebase instead of asking whenever it can, and treating the confirmed product conclusions as settled. Approaches are compared only where a real fork exists. The direction is stated as short as the risk allows, at the altitude of boundaries and contracts rather than edits, and names what is left to the executor. Say "don't grill me" to switch to minimal questioning. It can also stress-test an existing plan or design document, producing revision notes instead of a new direction.
+Then it reads the relevant code, validation commands, and conventions, and clarifies the design by **grilling by default**: it settles only the decisions worth settling before code is written — those expensive to reverse, or where a competent implementer could reasonably go another way — asking one question at a time with a recommended answer, answering from the codebase instead of asking whenever it can, and treating the confirmed product conclusions as settled. In Claude Code a third rung sits between the codebase and you: a technical decision the code and conventions leave open, and that the agent cannot recommend with confidence, goes to the `dev-advisor` advisor first — an answer that settles it as a technical fact or the single sane path removes the question and is cited as evidence alongside `file:line`, while a genuine remaining trade-off still reaches you, with the advisor's view in the recommended answer. If the advisor is unavailable or leaves the point open, the question reaches you as usual. Approaches are compared only where a real fork exists. The direction is stated as short as the risk allows, at the altitude of boundaries and contracts rather than edits, and names what is left to the executor. Say "don't grill me" to switch to minimal questioning. It can also stress-test an existing plan or design document, producing revision notes instead of a new direction.
 
 Exploration ends with the **departure check**, a single structured question that settles everything at once:
 
@@ -92,14 +92,14 @@ call and let the tie be broken on evidence.
 ```text
 Use dev-explore to understand how authentication works in this repo.
 Use dev-explore to grill me about this refactoring idea before we plan it.
-Use dev-explore to stress-test wiki/plans/003 before we execute it.
+Use dev-explore to stress-test wiki/plans/20260821-share-link-claim before we execute it.
 
 Use dev-write-plan to plan adding password reset support.
 Use dev-write-plan to turn this bug report into an implementation plan.
 
-Use dev-execute-plan to implement wiki/plans/001.
+Use dev-execute-plan to implement wiki/plans/20260821-share-link-claim.
 Use dev-execute-plan to execute the next TODO plan.
-Use dev-execute-plan to delegate wiki/plans/002 to a subagent and review the result.
+Use dev-execute-plan to delegate wiki/plans/20260822-rate-limit-headers to a subagent and review the result.
 Use dev-execute-plan to run plans 002 and 003 in parallel.
 
 Use dev-advisor to get a second opinion before I commit to this approach.
