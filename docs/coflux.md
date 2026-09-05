@@ -1,50 +1,69 @@
 # coflux
 
 `coflux` connects Claude Code to the owner's coflux agent command center: a
-per-machine daemon runs the PTYs that host agent
-sessions, and a web client shows every workspace with its live turn state so a
-human can supervise many parallel agents and take over at any time.
+per-machine daemon runs the PTYs that host agent sessions, and a web client
+shows every workspace with its live turn state so a human can supervise many
+parallel agents and take over at any time.
+
+The plugin is maintained upstream in
+[`myWsq/coflux`](https://github.com/myWsq/coflux) under
+`integrations/claude-plugin`; this marketplace collects that directory at a
+pinned commit.
 
 ## Components
 
-- **Hooks** — wire `PreToolUse`, `PostToolUse`,
+- **Hooks** — wire `UserPromptSubmit`, `PreToolUse`, `PostToolUse`,
   `PostToolUseFailure`, `PermissionRequest`, `Stop`, `StopFailure`, and
   `Notification` to the `cofluxd hook claude` messenger, which forwards the
   event to the local daemon. The daemon maps events to turn states —
   active / approval / question / done — shown live in the coflux sidebar.
-- **`coflux` skill** — what coflux is, how reporting works, and how to
-  diagnose the daemon with `cofluxd status`, `doctor`, and `logs`.
+- **`coflux` skill** — teaches an agent running inside a coflux terminal to
+  externalize long tasks, parallel work, and requests for help into real
+  terminals the user can see and take over. One rule: anything that closes
+  locally uses the zero-credential local commands
+  (`cofluxd terminal/progress/notify/ports`); only crossing workspace or
+  device boundaries goes through the center's `coflux` MCP.
+- **`.mcp.json`** — declares the center's `coflux` MCP server (Streamable HTTP
+  + OAuth 2.1). The URL is `${COFLUX_MCP_URL:-https://api.coflux.dev/mcp}`:
+  inside a coflux PTY the daemon injects `COFLUX_MCP_URL` (self-hosted centers
+  resolve automatically); elsewhere it falls back to the public service. The
+  per-call `timeout` is 660 s to cover `wait_terminal`'s 600 s ceiling.
 
 ## Behavior and privacy
 
-- Only the event name, notification type, agent session id, and messenger pid
-  are forwarded. Prompts, replies, and notification bodies never leave the
-  machine.
+- Hooks forward only the event name, notification type, agent session id,
+  in-flight background task count, and messenger pid. Prompts, replies, and
+  notification bodies never leave the machine.
 - The hooks never disturb the agent: every failure — daemon down, port
   closed, or `cofluxd` not installed at all — is a silent exit 0 with no
   stdout.
-- States appear only for sessions started inside coflux; the daemon resolves
-  the reporting pid against its own PTY process trees.
+- Local commands and states apply only to sessions started inside coflux; the
+  daemon resolves the calling pid against its own PTY process trees. MCP
+  access is scoped to the authorizing account.
 
 ## Requirements
 
-The [`cofluxd`](https://www.npmjs.com/package/cofluxd) CLI must be installed
-globally (`npm i -g cofluxd`) and the daemon registered (`cofluxd up`).
-Without it the hooks are silent no-ops.
+- The [`cofluxd`](https://www.npmjs.com/package/cofluxd) CLI installed
+  globally (`npm i -g cofluxd`) and the daemon registered (`cofluxd up`).
+  Without it the hooks are silent no-ops and local commands are unavailable.
+- One OAuth authorization for the MCP server: Claude Code does not open the
+  browser by itself — pick `coflux` in the `/mcp` menu and choose
+  Authenticate; tokens refresh automatically afterwards.
+- `COFLUX_*` variables appear in sessions only after the machine's daemon has
+  been upgraded (`cofluxd update && cofluxd restart`).
 
 ## Migrating from manual hook configuration
 
 If you previously wired `cofluxd hook claude` (or a dev-checkout
 `cofluxd.mjs hook claude`) by hand in `~/.claude/settings.json`, remove those
 `hooks` entries after installing this plugin. Otherwise every event fires
-twice — two process spawns and two POSTs per event; the merged state stays
-correct, but the cost is pure waste.
+twice; the merged state stays correct, but the cost is pure waste.
 
 ## Example prompts
 
 ```text
+Run the test suite in a coflux terminal so I can watch it and take over.
 Use coflux to check why the coflux daemon looks offline.
-Use coflux to explain how workspace activity states are reported.
 ```
 
 ## License
