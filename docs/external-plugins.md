@@ -1,43 +1,47 @@
-# 接入外部插件
+# External plugin sources
 
-插件源码留在所属项目中，plugins-builder 按固定 commit 收集已完成构建的插件目录，
-生成独立 marketplace 仓库。安装者仅需访问 marketplace，无需访问上游仓库。
-本地 `plugins/<name>/` 的片段展开和构建流程继续保留。
+Plugin source stays in its owning project. plugins-builder collects an already-built plugin
+directory at a pinned commit and generates a separate marketplace repository. Installers need
+access only to the marketplace, not the upstream repository. Local `plugins/<name>/` compilation
+and fragment expansion remain supported.
 
-## 上游交付格式
+## Upstream delivery format
 
-在项目中提供一个独立、可直接安装的 Claude Code 插件目录：
+Provide a self-contained, directly installable Claude Code plugin directory:
 
 ```text
 integrations/claude-plugin/
 ├── .claude-plugin/plugin.json
 ├── LICENSE
-├── skills/                  # 可选
-├── commands/                # 可选
-├── agents/                  # 可选
-├── hooks/hooks.json         # 有 hooks 目录时必需
-├── .mcp.json                # 可选
-├── scripts/                 # 可选，插件使用的运行脚本
-└── README.md                # 建议提供使用说明
+├── skills/                  # Optional
+├── commands/                # Optional
+├── agents/                  # Optional
+├── hooks/hooks.json         # Required when hooks/ exists
+├── .mcp.json                # Optional
+├── scripts/                 # Optional runtime scripts
+└── README.md                # Recommended usage instructions
 ```
 
-`plugin.json` 必须包含 kebab-case 的 `name`、严格 SemVer 的 `version`、非空
-`description` 和 `author.name`。其余 Claude 原生字段直接保留，不由 builder 重写。
-插件目录必须有自己的 `LICENSE`，不会被 builder 的许可证覆盖。允许只有 commands、
-hooks 或 MCP 的插件，不强制存在 skills。
+`plugin.json` must contain a kebab-case `name`, strict SemVer `version`, and non-empty `description`
+and `author.name`. Other native Claude fields are preserved without rewriting. Each plugin must
+include its own `LICENSE`; the builder does not replace it with the builder's license. Plugins
+containing only commands, hooks, or MCP configuration do not need a skills directory.
 
-目录整体发布，包括辅助脚本、二进制资源和原始 manifest；文件字节及可执行位保留。
-不得包含符号链接、Git 子模块、Git LFS 指针或秘密文件。单个文件上限为 32 MiB。常见凭据路径 `.env`、`.env.*`、`.npmrc`、
-`.netrc`、`.ssh`、`.git` 会被拒绝；该检查不是通用秘密扫描，发布者仍须审查全部文件。
-占位配置示例使用 `config.example.json` 等文件名。
+The entire directory is published, including auxiliary scripts, binary resources, and the original
+manifest. File bytes and executable bits are preserved. Symlinks, Git submodules, Git LFS pointers,
+and secret files are prohibited. Individual files are limited to 32 MiB. Common credential paths
+`.env`, `.env.*`, `.npmrc`, `.netrc`, `.ssh`, and `.git` are rejected. This is not a general secret
+scanner; publishers must review every delivered file. Use names such as `config.example.json`
+for placeholder configuration examples.
 
-上游负责提前编译、展开模板并提交最终插件目录。builder 不运行上游构建脚本、不安装依赖，
-不展开外部插件里的 fragment 指令。插件不得依赖交付目录之外的源码文件；运行时外部程序、
-服务和环境变量应在 README 中说明。不要把整个业务仓库作为交付目录。
+Upstream must compile, expand templates, and commit the final directory before registration. The
+builder neither runs upstream build scripts nor installs dependencies or expands external fragment
+directives. Plugins must not depend on source files outside the delivery directory. Document runtime
+programs, services, and environment variables in the README. Do not deliver an entire application repo.
 
-## 登记来源
+## Register a source
 
-创建 `catalog/plugins/<name>.json`，例如：
+Create `catalog/plugins/<name>.json`, for example:
 
 ```json
 {
@@ -52,53 +56,63 @@ hooks 或 MCP 的插件，不强制存在 skills。
 }
 ```
 
-将名称加入 `catalog/marketplace.json.plugins`。上面的 SHA 是示例，必须换成上游真实的
-40 位小写 commit SHA。`path` 可以为 `.`（专用插件仓库根目录），不能使用绝对路径或 `..`。
-支持无凭据的 HTTPS URL 和 `git@host:owner/repo.git` SSH 地址。
+Add the name to `catalog/marketplace.json.plugins`. Replace the example SHA with a real, lowercase,
+40-character upstream commit SHA. `path` may be `.` for a dedicated plugin repository's root; absolute
+paths and `..` are prohibited. Credential-free HTTPS and `git@host:owner/repo.git` SSH URLs are supported.
 
-外部 descriptor 仅接受 `name`、`category`、`origin`；版本、描述和作者由上游 manifest
-提供，名称必须和 catalog 一致。`ref` 可选，仅用作供人阅读的版本标签；**SHA 是唯一锁定依据**，
-构建不会解析 ref 或自动跟随新版本。完整 SHA 必须能从 Git 服务获取。
+External descriptors accept only `name`, `category`, and `origin`. Version, description, and author
+come from the upstream manifest, whose name must match the catalog. The optional `ref` is a label
+for readers; **SHA is the only pin**. Builds do not resolve refs or follow new versions automatically.
+The Git server must allow fetching the full pinned SHA.
 
-更新时，在上游提升插件版本并提交交付目录，再通过 PR 更新 builder 中的 SHA/ref，运行
-`npm run verify` 并按现有 release 流程发布。分类等 marketplace 条目变化也要求上游插件
-版本提升。第一版不自动发现版本、不自动创建更新 PR、不支持 release ZIP 来源。
+For updates, bump the upstream plugin version and commit the delivery directory, then update the
+builder's SHA/ref through a PR. Run `npm run verify` and use the existing release process. Marketplace
+entry changes, including category, also require an upstream plugin version bump. The initial version
+does not discover updates automatically, create update PRs automatically, or accept release ZIP sources.
 
-来源声明保存在 builder 的版本历史中，不额外写入公开产物；公开 manifest 自身的
-`repository`、README 等内容可能暴露上游地址，应由上游决定是否保留。
+Source declarations remain in the builder's version history and are not added to public artifacts.
+The upstream manifest's `repository`, README, or other delivered files may expose the upstream address;
+the upstream publisher decides whether to include it.
 
-## 私有仓库认证
+## Private repository authentication
 
-私有源码发布到公开 marketplace 时，**选中的整个插件目录会公开**，其余源码不会被收集。
-若插件也需保持私有，marketplace 仓库同样应设为 private。
+Publishing a private source into a public marketplace **makes the entire selected plugin directory
+public**. Other source files are not collected into the plugin. Keep the marketplace private too if
+the plugin must remain private.
 
-本地使用已有 Git credential helper 或 SSH agent。GitHub HTTPS 来源还支持环境变量
-`PLUGIN_SOURCE_TOKEN`，可由秘密管理工具注入；不要把 token 写入 URL、catalog 或文件。
-该变量仅发送给 `https://github.com/` 来源。SSH 来源使用现有 agent 和 known_hosts；
-builder 不关闭主机校验。非 GitHub 私有来源使用对应 Git credential helper/SSH 配置。
+Locally, use an existing Git credential helper or SSH agent. GitHub HTTPS sources also support the
+`PLUGIN_SOURCE_TOKEN` environment variable, which a secret manager can inject. Never put tokens in
+URLs, catalog files, or artifacts. This token is sent only to `https://github.com/` sources. SSH uses
+the existing agent and known_hosts; the builder does not disable host verification. Non-GitHub
+private sources use their own Git credential helper or SSH configuration.
 
-Actions 推荐使用 GitHub App：
+For Actions, a GitHub App is recommended:
 
-1. 创建只授予仓库 **Contents: read** 的 App，并安装到需要收集的来源仓库。
-2. 设置 builder Actions variables：`PLUGIN_SOURCE_APP_ID`、`PLUGIN_SOURCE_OWNER`
-   （来源仓库所属用户或组织）、`PLUGIN_SOURCE_REPOSITORIES`（逗号或换行分隔的仓库名称）。
-   明确列出仓库，避免授予不必要的访问范围；第一版一个 App token 对应一个 owner。
-3. 将 App 私钥保存为 Actions secret `PLUGIN_SOURCE_APP_PRIVATE_KEY`。
+1. Create an App with only repository **Contents: read** permission and install it on the source repos.
+2. Set builder Actions variables `PLUGIN_SOURCE_APP_ID`, `PLUGIN_SOURCE_OWNER` (the source owner or
+   organization), and `PLUGIN_SOURCE_REPOSITORIES` (comma- or newline-separated repository names).
+   List repositories explicitly to limit access. The initial integration uses one owner per App token.
+3. Store the App private key in the `PLUGIN_SOURCE_APP_PRIVATE_KEY` Actions secret.
 
-verify/release workflow 会生成短期只读 token，仅传入真实 catalog 构建步骤。
-也可以不配置 App，改用具有来源仓库 Contents 读取权限的 fine-grained token，存入
-`PLUGIN_SOURCE_TOKEN` secret。默认 `GITHUB_TOKEN` 不具有其他 private 仓库的访问权。
-这套读取凭据独立于写入市场的 `MARKETPLACE_REPO_SSH_KEY`，禁止复用发布 deploy key。
+The verify and release workflows mint a short-lived read-only token and pass it only to the real
+catalog build step. Alternatively, omit the App configuration and store a fine-grained token with
+source Contents read access in the `PLUGIN_SOURCE_TOKEN` secret. The default `GITHUB_TOKEN` cannot
+read other private repositories. Source read credentials are separate from the marketplace's
+`MARKETPLACE_REPO_SSH_KEY`; never reuse the publishing deploy key.
 
-同仓库 PR 的代码必须可信，因为其构建步骤可以访问 Actions secrets。fork PR 不会获得
-来源凭据；存在私有来源时，其 catalog build 会明确失败，维护者应在审查后使用可信分支验证。
-不要改用 `pull_request_target` 执行未经审查的 PR 代码。
+Same-repository PR code must be trusted because its build can access Actions secrets. Fork PRs do
+not receive source credentials. With private sources, their catalog build fails explicitly; review
+the changes before validating on a trusted branch. Do not use `pull_request_target` to execute
+unreviewed PR code.
 
-## 校验边界
+## Validation boundaries
 
-构建检查来源锁定、目录边界、真实文件、manifest 必需字段、名称与版本、LICENSE 及
-hooks/MCP/LSP 配置 JSON 语法。它不替代 Claude Code 全量 schema 校验或安装烟测，也不保证
-运行时脚本与外部服务可用。提取失败或校验失败不会替换上次成功的 dist。
+The builder checks source pins, directory boundaries, real files, required manifest fields, names,
+versions, LICENSE, and JSON syntax for hooks/MCP/LSP configuration. It does not replace complete
+Claude Code schema validation or installation smoke tests, nor guarantee runtime scripts and
+external services work. Fetch or validation failures preserve the last successful dist.
 
-发布门禁比较整个插件目录与 marketplace 条目：新增 commands、MCP 配置或辅助资源等
-任何变化都要求插件版本严格增加。本地测试使用临时 Git 仓库，无需网络或私有凭据。
+The release gate compares the entire plugin directory and marketplace entry. Changes to commands,
+MCP configuration, auxiliary resources, or any other payload require a strictly greater plugin
+version. Local tests use temporary Git repositories and need neither network access nor private
+credentials.

@@ -1,44 +1,51 @@
 # market
 
-通用的 Claude Code 插件接入 Skill。目标市场由使用者指定，或从项目、个人配置中读取；
-不会默认接入本插件作者的市场，也不要求访问作者的私有仓库。
+A general-purpose Claude Code plugin onboarding skill. Users select the target marketplace in
+their request or project/personal configuration. The skill does not default to its author's
+marketplace or require access to the author's private repositories.
 
-## 安装和使用
+## Installation and usage
 
-本插件通过此市场分发。包含此插件的版本正式发布后，在 Claude Code 中运行：
+This marketplace distributes the plugin. In Claude Code, run:
 
 ```text
 /plugin marketplace add myWsq/plugins
 /plugin install market@plugins
-/market:onboard 把当前项目的插件接入 example-org/team-market，按该市场的贡献指南准备登记
+/market:onboard Onboard this project's plugin into example-org/team-market using its contribution guide.
 ```
 
-这里的 `example-org/team-market` 是目标示例，应替换为自己的市场。安装来源与接入目标
-互相独立。也可以直接给出目标的接入契约链接或本地维护工作区。
+Replace `example-org/team-market` with your destination. The installation source and onboarding
+target are independent. You can also supply a contract URL or a local maintenance checkout.
 
-Skill 会读取目标市场的要求，准备交付目录、核对版本与来源，按其流程登记或提交更新。
-既可用于直接引用外部仓库的市场，也可用于收集插件产物的 builder；格式、认证和发布方式
-以目标契约为准。有维护工作区和相应权限时继续完成修改与验证，否则提供可交接的接入材料。
-未指定目标且无明确配置时，Skill 会询问目标市场，不自行选择分发它的市场。
+The skill reads the target's requirements, prepares the delivery directory, checks the version and
+source, and follows its registration or update process. It supports both marketplaces referencing
+external repositories and builders collecting plugin artifacts; delivery format, authentication,
+and publication follow the target contract. With a maintenance checkout and appropriate access,
+it can continue through edits and verification. Otherwise it produces materials for a maintainer.
+When no target is specified or configured, it asks instead of choosing its distribution marketplace.
 
-## 个人或项目配置
+## Personal or project configuration
 
-可在自己已有的个人指令或项目 AGENTS.md 中记录默认目标，无需修改公共 Skill。例如：
+Record a default destination in existing personal instructions or a project AGENTS.md without
+modifying the public skill. For example:
 
 ```markdown
-## 插件发布目标
+## Plugin publication target
 
-- 默认市场：example-org/team-market
-- 维护仓库：example-org/team-market-builder
-- 接入契约：维护仓库 README 中链接的贡献指南
+- Default marketplace: example-org/team-market
+- Maintenance repository: example-org/team-market-builder
+- Delivery contract: the contribution guide linked from the maintenance repository's README
 ```
 
-以上是普通指令示例，不是必须创建的配置文件或固定 schema。本次指令优先于默认目标。
-私有地址和个人发布规则留在自己的配置中；凭据使用秘密存储，不写进这些指令。
+This is an instruction example, not a required configuration file or fixed schema. The current
+request takes precedence over defaults. Keep private addresses and personal release rules in your
+own configuration; store credentials in secret storage rather than these instructions.
 
-Skill 不携带目标市场的契约副本。完整接入需要能读取目标要求；契约不可访问时，会报告
-尚未核对的部分。若用户要求发布，则依据目标已有的入口和权限执行，不内置特定仓库的
-管理员操作。交付准备、提交更新请求、收录与正式发布分别报告。
+The skill does not bundle a copy of the target's contract. Complete onboarding requires access to
+the target's requirements; unavailable documentation is reported as an unverified part of the work.
+When publication is requested, the skill follows the target's documented entry point and actual
+permissions rather than embedding repository-specific administrator operations. Delivery preparation,
+update submission, acceptance, and publication are reported separately.
 
 ## License
 
