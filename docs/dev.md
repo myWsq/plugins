@@ -60,16 +60,15 @@ For a **parallel group**, each member is dispatched into its own git worktree an
 
 ## Second opinion
 
-`dev-advisor` (Claude Code only — Codex has no subagent mechanism) dispatches
-the host's generic subagent on the top Claude tier (`fable`) and briefs it as
-an advisor: review rather than implement, read the repository and run
-read-only commands such as `git diff` and non-mutating checks, answer. There
-is no advisor agent definition and no prompt template — the skill states the
-principles every brief must carry (the role, the read-only boundary, the shape
-of a useful answer), and the orchestrator writes each brief in its own words.
-Pass the tier explicitly: a subagent dispatched without a `model` inherits the
-orchestrator's, and an advisor at or below the model it reviews is worse than
-none.
+`dev-advisor` dispatches the host's generic subagent on the top Claude tier
+(`fable`) and briefs it as an advisor: review rather than implement, read the
+repository and run read-only commands such as `git diff` and non-mutating
+checks, answer. There is no advisor agent definition and no prompt template —
+the skill states the principles every brief must carry (the role, the
+read-only boundary, the shape of a useful answer), and the orchestrator writes
+each brief in its own words. Pass the tier explicitly: a subagent dispatched
+without a `model` inherits the orchestrator's, and an advisor at or below the
+model it reviews is worse than none.
 
 Its leverage is not only the tier. It arrives with fresh context, reads the code
 itself instead of trusting your account of it, and is asked for a verdict rather

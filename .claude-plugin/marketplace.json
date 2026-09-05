@@ -10,8 +10,8 @@
   "plugins": [
     {
       "name": "dev",
-      "source": "./claude-plugins/dev",
-      "version": "0.15.0",
+      "source": "./plugins/dev",
+      "version": "0.15.1",
       "description": "Plan-driven software development with subagent delegation: explore, plan, execute, and review.",
       "author": {
         "name": "Shuaiqi Wang",
@@ -23,8 +23,8 @@
     },
     {
       "name": "commit",
-      "source": "./claude-plugins/commit",
-      "version": "0.3.0",
+      "source": "./plugins/commit",
+      "version": "0.3.1",
       "description": "Git commit, push, and pull-request workflows with a fixed safety floor: stage by name, refuse staged secrets, and — in the pull-request flow — never put a commit on the remote default branch.",
       "author": {
         "name": "Shuaiqi Wang",
@@ -36,8 +36,8 @@
     },
     {
       "name": "arch",
-      "source": "./claude-plugins/arch",
-      "version": "0.3.1",
+      "source": "./plugins/arch",
+      "version": "0.3.2",
       "description": "The owner's technology-selection knowledge base: decision frameworks with their reasons, one skill per domain.",
       "author": {
         "name": "Shuaiqi Wang",
@@ -49,8 +49,8 @@
     },
     {
       "name": "coflux",
-      "source": "./claude-plugins/coflux",
-      "version": "0.2.0",
+      "source": "./plugins/coflux",
+      "version": "0.2.1",
       "description": "Report Claude Code activity to the local coflux daemon so the coflux command center shows live per-workspace turn states.",
       "author": {
         "name": "Shuaiqi Wang",

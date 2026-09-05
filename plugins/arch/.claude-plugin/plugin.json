@@ -1,7 +1,7 @@
 {
-  "name": "coflux",
-  "version": "0.2.0",
-  "description": "Report Claude Code activity to the local coflux daemon so the coflux command center shows live per-workspace turn states.",
+  "name": "arch",
+  "version": "0.3.2",
+  "description": "The owner's technology-selection knowledge base: decision frameworks with their reasons, one skill per domain.",
   "author": {
     "name": "Shuaiqi Wang",
     "email": "wsq961@outlook.com",
@@ -11,11 +11,12 @@
   "repository": "https://github.com/myWsq/plugins-builder",
   "license": "MIT",
   "keywords": [
-    "coflux",
-    "agent-status",
-    "daemon",
-    "hooks",
-    "monitoring",
+    "architecture",
+    "technology-selection",
+    "monorepo",
+    "web",
+    "server",
+    "project-setup",
     "skills"
   ]
 }

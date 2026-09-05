@@ -7,7 +7,7 @@ human can supervise many parallel agents and take over at any time.
 
 ## Components
 
-- **Hooks** (Claude Code only) — wire `PreToolUse`, `PostToolUse`,
+- **Hooks** — wire `PreToolUse`, `PostToolUse`,
   `PostToolUseFailure`, `PermissionRequest`, `Stop`, `StopFailure`, and
   `Notification` to the `cofluxd hook claude` messenger, which forwards the
   event to the local daemon. The daemon maps events to turn states —
