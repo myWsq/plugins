@@ -1,6 +1,6 @@
 ---
 name: commit
-description: Commit and push with a fixed safety floor — stage by name, refuse staged secrets, match the repository's message style. Use when the user asks to commit, save, or push code (e.g. "commit this", "提交代码", "push my changes").
+description: "Commit and push with a fixed safety floor — stage by name, refuse staged secrets, match the repository's message style. Use when the user asks to commit, save, or push code (e.g. \"commit this\", \"提交代码\", \"push my changes\")."
 ---
 
 # commit

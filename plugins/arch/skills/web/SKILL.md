@@ -1,9 +1,9 @@
 ---
-name: arch-web
-description: The owner's frontend web selection framework — React 19 with the React Compiler, SPA-first (SSR only when explicitly required), Vite, TanStack Router, the astryx design system with StyleX for styling, jotai for cross-page client state, TanStack Query wrapped in custom hooks for request state, no test code (manual acceptance by a human or an agent), and no default deployment target. Use when starting or restructuring a web frontend ("build a web app", "新建一个前端项目") or when deciding the web stack ("前端选型", "用什么框架/路由/状态管理", "要不要 SSR").
+name: web
+description: "The owner's frontend web selection framework — React 19 with the React Compiler, SPA-first (SSR only when explicitly required), Vite, TanStack Router, the astryx design system with StyleX for styling, jotai for cross-page client state, TanStack Query wrapped in custom hooks for request state, no test code (manual acceptance by a human or an agent), and no default deployment target. Use when starting or restructuring a web frontend (\"build a web app\", \"新建一个前端项目\") or when deciding the web stack (\"前端选型\", \"用什么框架/路由/状态管理\", \"要不要 SSR\")."
 ---
 
-# arch-web
+# arch:web
 
 The owner's settled judgment on frontend web development. Like every `arch`
 skill, this is a decision framework: defaults with their reasons, so they can be
@@ -28,7 +28,7 @@ project explicitly requires it; "it might be faster" is not a requirement.
 
 The community default. `@vitejs/plugin-react` carries the React Compiler's babel
 plugin, StyleX integrates with the build, and it coexists cleanly with the
-pnpm + turborepo repository baseline (see `arch-monorepo`).
+pnpm + turborepo repository baseline (see `arch:monorepo`).
 
 ## Routing: TanStack Router
 
@@ -64,7 +64,7 @@ deliberate discipline, not an omission: agent-maintained UI code changes too fas
 for test suites to pay back their maintenance cost, while an agent can always
 verify behavior by driving the real app.
 
-This stance governs projects built under arch-web; it does not override an
+This stance governs projects built under arch:web; it does not override an
 existing repository's own test contract.
 
 ## Deployment: per project

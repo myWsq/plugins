@@ -1,13 +1,13 @@
 ---
-name: dev-write-plan
-description: Turn a clear development request into a self-contained outcome contract under `wiki/plans/` — requirement, decisions, tradeoffs, direction, scope, and acceptance criteria — for dev-execute-plan or another agent to implement. A decomposable requirement may become a plan group (contract plan, parallel members with disjoint scopes, integration plan) whose members execute concurrently. Use when the user asks to plan, design an implementation approach, convert a bug/feature request into an executable plan, or continue after dev-explore. Planning is read-only except for files under `wiki/plans/`.
+name: write-plan
+description: "Turn a clear development request into a self-contained outcome contract under `wiki/plans/` — requirement, decisions, tradeoffs, direction, scope, and acceptance criteria — for dev:execute-plan or another agent to implement. A decomposable requirement may become a plan group (contract plan, parallel members with disjoint scopes, integration plan) whose members execute concurrently. Use when the user asks to plan, design an implementation approach, convert a bug/feature request into an executable plan, or continue after dev:explore. Planning is read-only except for files under `wiki/plans/`."
 ---
 
-# dev-write-plan
+# dev:write-plan
 
 Write one plan for one requirement. The plan is an **outcome contract, not a step-by-step script**: it records what the executor cannot cheaply re-derive — the requirement, the decisions with their tradeoffs, the landmines, the scope boundary, and what done means — and leaves implementation design to the executor, who works against the live code. It must be complete enough for an agent with no conversation context to design the implementation itself, validate it, and stop safely.
 
-A requirement that genuinely decomposes may become a small **plan group** whose members can execute concurrently (see step 2); each member is still a self-contained outcome contract.
+A requirement that genuinely decomposes may become a small **plan group** whose members can execute concurrently (see step 2); each member is still a self-contained outcome contract. Independent milestones inside one plan need no group: `dev:execute-plan` fans them out into concurrent work packages at dispatch, reading their independence off the plan's Direction.
 
 ## Rules
 
@@ -22,15 +22,15 @@ A requirement that genuinely decomposes may become a small **plan group** whose 
 
 ### 1. Establish context
 
-- If continuing from `dev-explore`, reuse the explored terrain, clarified requirement, the product conclusions when the change is perceptible to its consumer, and departure-check answers. The grilling and all confirmations already happened there: do not re-interrogate settled decisions and do not re-confirm anything.
+- If continuing from `dev:explore`, reuse the explored terrain, clarified requirement, the product conclusions when the change is perceptible to its consumer, and departure-check answers. The grilling and all confirmations already happened there: do not re-interrogate settled decisions and do not re-confirm anything.
 - If starting from a direct request, do lightweight recon: docs, root config, CI, relevant files, exact validation commands, and local conventions.
-- For direct requests, clarify remaining open decisions following the same grill-by-default convention as `dev-explore` (code-answerable questions answered from code, the rest one at a time with a recommended answer; honor "don't grill me"), then finish with `dev-explore`'s departure check — direction, execution mode, autopilot or review pause — so nothing needs confirmation later. For the execution-mode item, ask the execution-mode question defined in the installed `dev-execute-plan` skill's "Choose execution mode" section (the canonical definition); if that skill cannot be located, omit the item — `dev-execute-plan` asks at dispatch time.
-- If clarification uncovers a genuinely open-ended design space, switch to `dev-explore` to converge on a direction before writing the plan. Switch likewise when the request is perceptible to its consumer — it changes what they see or do — and no product conclusions (interaction flow, states, UI structure, scope) have been settled: `dev-explore` clarifies the product before the design, and this skill does not repeat that stage.
+- For direct requests, clarify remaining open decisions following the same grill-by-default convention as `dev:explore` (code-answerable questions answered from code, the rest one at a time with a recommended answer; honor "don't grill me"), then finish with `dev:explore`'s departure check — direction, execution mode, autopilot or review pause — so nothing needs confirmation later. For the execution-mode item, ask the execution-mode question defined in the installed `dev:execute-plan` skill's "Choose execution mode" section (the canonical definition); if that skill cannot be located, omit the item — `dev:execute-plan` asks at dispatch time.
+- If clarification uncovers a genuinely open-ended design space, switch to `dev:explore` to converge on a direction before writing the plan. Switch likewise when the request is perceptible to its consumer — it changes what they see or do — and no product conclusions (interaction flow, states, UI structure, scope) have been settled: `dev:explore` clarifies the product before the design, and this skill does not repeat that stage.
 - If planning itself surfaces a new decision: when minor, decide it yourself following the approved direction and local conventions, and record it under Decisions & tradeoffs marked `(decided while planning)`; when it contradicts the approved direction or the code's current state, stop and report instead of guessing or re-asking piecemeal.
 
 ### 2. Decompose only when it pays
 
-Default: one plan for one requirement. Split into a plan group only when the requirement genuinely decomposes and the split passes **all three** parallel-safety criteria:
+Default: one plan for one requirement. A plan group is for a split that needs a *designed* boundary — a contract plan a human reviews before the members build on it. Independent milestones do not need a group: `dev:execute-plan` fans them out at dispatch as work packages. Split into a plan group only when the requirement genuinely decomposes, the split needs such a contract, and it passes **all three** parallel-safety criteria:
 
 1. **Disjoint scopes** — the parallel members' in-scope file sets do not intersect. Shared surfaces (package manifests, route/DI registration, migrations, shared types and config) belong to the contract plan, never to two parallel members.
 2. **Frozen contract** — every boundary the parallel members meet at (API schema, shared types, stubs) is settled by a serial contract plan they all depend on.
@@ -45,7 +45,7 @@ The canonical shape is contract-first:
 20260821-integration   integration — depends on module-a, module-b  (serial)
 ```
 
-Parallelism is a byproduct of a split that meets the bar, not a goal. Never force a split to manufacture parallelism: a forced split trades visible wall-clock time for deferred merge-conflict and interface-drift costs. If any criterion fails, write one plan.
+Parallelism is never the reason to form a group — a plan whose milestones are independent already runs concurrently as work packages. Never force a split to manufacture parallelism: a forced split trades visible wall-clock time for deferred merge-conflict and interface-drift costs. If any criterion fails, write one plan.
 
 Group membership lives only in `wiki/plans/README.md`; each member stays self-contained and declares just its `Depends on:` edges.
 
@@ -78,7 +78,7 @@ Use this structure:
 - Risk: LOW | MED | HIGH
 - Depends on: none | wiki/plans/YYYYMMDD-*.md
 - Category: bug | feature | tests | refactor | docs | dx | migration
-- Execution: subagent[ <model or executor agent>] | self — from the departure check; omit the line when the check skipped execution mode (`dev-execute-plan` asks at dispatch time)
+- Execution: subagent[ <model or executor agent>] | self — from the departure check; omit the line when the check skipped execution mode (`dev:execute-plan` asks at dispatch time)
 - Planned at: `<short-sha>`, <YYYY-MM-DD>
 
 ## Requirement
@@ -105,10 +105,14 @@ surface: if one no longer holds, the decision needs revisiting.
 
 Architecture, data flow, boundaries, and conventions to follow — at milestone
 granularity. Each milestone names an outcome and its validation, never the
-edits that produce it. Milestone validations must be fast, in-process,
-exit-code-checkable commands (unit tests, typecheck, lint), run by whoever
-verifies: the orchestrator under delegation, the implementer itself only in
-self-execution. Anything needing a runtime environment — e2e/UI suites, a
+edits that produce it. State how the milestones depend on each other — which
+milestone's outcome or validation needs another's — and say so when they are
+independent: `dev:execute-plan` reads independence off this section when
+deciding whether to fan the plan out into concurrent work packages, and a
+plan that leaves it unstated runs as one. Milestone validations must be fast,
+in-process, exit-code-checkable commands (unit tests, typecheck, lint), run by
+whoever verifies: the orchestrator under delegation, the implementer itself
+only in self-execution. Anything needing a runtime environment — e2e/UI suites, a
 running app, browser, or external service, a project verify flow — is
 acceptance-tier: list it under Commands marked `(acceptance)`, never as a
 milestone validation; it runs last, after code review.
@@ -166,8 +170,8 @@ What future maintainers or reviewers should watch.
 
 ### 4. Handoff
 
-- After a completed departure check — whether it happened in `dev-explore` or here — do not ask anything: summarize the plan for the record, commit only `wiki/plans/`, and start `dev-execute-plan` with the recorded execution mode. For a plan group, hand over the whole group — its concurrent dispatch is defined in `dev-execute-plan`.
-- If the user opted into a review pause at the departure check, stop after writing the plan. Leaving `wiki/plans/` uncommitted is fine: `dev-execute-plan` commits pending `wiki/plans/` files itself during preflight. When the user comes back, resume directly with the recorded execution mode; do not re-run the departure check unless the review changed the plan's direction.
+- After a completed departure check — whether it happened in `dev:explore` or here — do not ask anything: summarize the plan for the record, commit only `wiki/plans/`, and start `dev:execute-plan` with the recorded execution mode. For a plan group, hand over the whole group — its concurrent dispatch is defined in `dev:execute-plan`.
+- If the user opted into a review pause at the departure check, stop after writing the plan. Leaving `wiki/plans/` uncommitted is fine: `dev:execute-plan` commits pending `wiki/plans/` files itself during preflight. When the user comes back, resume directly with the recorded execution mode; do not re-run the departure check unless the review changed the plan's direction.
 - Only if no departure check ever happened (unusual entry path): ask once — execute now (self-execution or a named agent) or review first — then proceed accordingly.
 
 ## Quality bar

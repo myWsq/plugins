@@ -1,9 +1,9 @@
 ---
-name: commit-clean
-description: Delete local branches whose upstream is gone, along with their linked worktrees. Use when the user asks to clean up stale or gone branches (e.g. "clean up old branches", "清理分支", "clean gone"). Deletes only branches whose remote tracking branch is marked [gone].
+name: clean
+description: "Delete local branches whose upstream is gone, along with their linked worktrees. Use when the user asks to clean up stale or gone branches (e.g. \"clean up old branches\", \"清理分支\", \"clean gone\"). Deletes only branches whose remote tracking branch is marked [gone]."
 ---
 
-# commit-clean
+# commit:clean
 
 Delete local branches whose remote tracking branch is marked `[gone]` — typically the leftovers of merged pull requests. Nothing else is in scope.
 

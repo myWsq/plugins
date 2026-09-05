@@ -11,7 +11,7 @@
     {
       "name": "dev",
       "source": "./plugins/dev",
-      "version": "0.15.1",
+      "version": "0.17.0",
       "description": "Plan-driven software development with subagent delegation: explore, plan, execute, and review.",
       "author": {
         "name": "Shuaiqi Wang",
@@ -24,7 +24,7 @@
     {
       "name": "commit",
       "source": "./plugins/commit",
-      "version": "0.3.1",
+      "version": "0.4.0",
       "description": "Git commit, push, and pull-request workflows with a fixed safety floor: stage by name, refuse staged secrets, and — in the pull-request flow — never put a commit on the remote default branch.",
       "author": {
         "name": "Shuaiqi Wang",
@@ -37,7 +37,7 @@
     {
       "name": "arch",
       "source": "./plugins/arch",
-      "version": "0.3.2",
+      "version": "0.4.0",
       "description": "The owner's technology-selection knowledge base: decision frameworks with their reasons, one skill per domain.",
       "author": {
         "name": "Shuaiqi Wang",
@@ -52,6 +52,19 @@
       "source": "./plugins/coflux",
       "version": "0.2.1",
       "description": "Report Claude Code activity to the local coflux daemon so the coflux command center shows live per-workspace turn states.",
+      "author": {
+        "name": "Shuaiqi Wang",
+        "email": "wsq961@outlook.com",
+        "url": "https://github.com/myWsq"
+      },
+      "category": "development",
+      "homepage": "https://github.com/myWsq/plugins"
+    },
+    {
+      "name": "market",
+      "source": "./plugins/market",
+      "version": "0.1.3",
+      "description": "Prepare and onboard Claude Code plugins into a user-selected marketplace using its delivery and contribution requirements.",
       "author": {
         "name": "Shuaiqi Wang",
         "email": "wsq961@outlook.com",

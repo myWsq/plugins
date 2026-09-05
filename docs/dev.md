@@ -8,26 +8,26 @@ The division of labor: the orchestrating agent clarifies what the consumer of th
 
 | Skill | Purpose | Output |
 | --- | --- | --- |
-| `dev-explore` | Read-only exploration: for a change its consumer can perceive, clarify the product first — interaction flow, states, UI structure, scope — from the product surface and confirm it; then map the relevant code, grill the technical design question by question until it holds up, compare approaches, and finish with the departure check — the workflow's last confirmation gate. Can also stress-test an existing plan or design. | Product conclusions when the change is perceptible, a codebase map, resolved decisions, an approved direction, and the chosen execution mode. |
-| `dev-write-plan` | Turn the converged requirement into a self-contained outcome contract — or, when it decomposes safely, a parallel plan group (contract → parallel members → integration). | `wiki/plans/YYYYMMDD-*.md` plus the `wiki/plans/README.md` index. |
-| `dev-execute-plan` | Execute a plan on the current branch, or a parallel group concurrently in per-plan worktrees — by default dispatching implementation to a host subagent on the `opus` tier — then verify every done criterion, review the diff, and merge. | Implementation commits and plan status updates on the current branch. |
-| `dev-advisor` | Brief a top-tier subagent as a read-only advisor reading with fresh context, before committing to an approach, when stuck, or before declaring work done. | Review findings and a direction to keep or change. It reviews; it does not implement. |
+| `dev:explore` | Read-only exploration: for a change its consumer can perceive, clarify the product first — interaction flow, states, UI structure, scope — from the product surface and confirm it; then map the relevant code, grill the technical design question by question until it holds up, compare approaches, and finish with the departure check — the workflow's last confirmation gate. Can also stress-test an existing plan or design. | Product conclusions when the change is perceptible, a codebase map, resolved decisions, an approved direction, and the chosen execution mode. |
+| `dev:write-plan` | Turn the converged requirement into a self-contained outcome contract — or, when it decomposes safely, a parallel plan group (contract → parallel members → integration). | `wiki/plans/YYYYMMDD-*.md` plus the `wiki/plans/README.md` index. |
+| `dev:execute-plan` | Execute a plan on the current branch — fanning it out into concurrent work packages in per-package worktrees when its milestones are independent — or a parallel group concurrently in per-plan worktrees, by default dispatching implementation to a host subagent on the `opus` tier, then verify every done criterion, review the diff, and merge. | Implementation commits and plan status updates on the current branch. |
+| `dev:advisor` | Brief a top-tier subagent as a read-only advisor reading with fresh context, before committing to an approach, when stuck, or before declaring work done. | Review findings and a direction to keep or change. It reviews; it does not implement. |
 
 The skills can be used independently, but they are designed to run as a chain:
 
 ```text
-dev-explore ──(departure check: the last confirmation)──> dev-write-plan ──> dev-execute-plan
+dev:explore ──(departure check: the last confirmation)──> dev:write-plan ──> dev:execute-plan
 ```
 
 After the departure check, the chain is on autopilot: the plan is committed and executed without further confirmation. STOP and BLOCK conditions still halt the chain — those are safety stops, not confirmations — and pushing, opening PRs, or merging always require an explicit user request.
 
 ## How the flow works
 
-### 1. Explore and grill (`dev-explore`)
+### 1. Explore and grill (`dev:explore`)
 
-`dev-explore` modifies nothing. It triages the request first, and for a change its consumer can perceive — a page, a flow, copy, a CLI command or its output, the shape of an API call — it **clarifies the product before reading the implementation**: it looks only at the product surface the consumer already sees, grills the consumer and trigger, product form, interaction flow, structure-level UI (layout, components, the empty/loading/error/success states, key copy), scope, and consumer-visible acceptance, then asks one structured confirmation. Visual design stays with the project's design system. Internal changes — bug fixes, refactors, infrastructure, performance — skip this stage.
+`dev:explore` modifies nothing. It triages the request first, and for a change its consumer can perceive — a page, a flow, copy, a CLI command or its output, the shape of an API call — it **clarifies the product before reading the implementation**: it looks only at the product surface the consumer already sees, grills the consumer and trigger, product form, interaction flow, structure-level UI (layout, components, the empty/loading/error/success states, key copy), scope, and consumer-visible acceptance, then asks one structured confirmation. Visual design stays with the project's design system. Internal changes — bug fixes, refactors, infrastructure, performance — skip this stage.
 
-Then it reads the relevant code, validation commands, and conventions, and clarifies the design by **grilling by default**: it settles only the decisions worth settling before code is written — those expensive to reverse, or where a competent implementer could reasonably go another way — asking one question at a time with a recommended answer, answering from the codebase instead of asking whenever it can, and treating the confirmed product conclusions as settled. In Claude Code a third rung sits between the codebase and you: a technical decision the code and conventions leave open, and that the agent cannot recommend with confidence, goes to the `dev-advisor` advisor first — an answer that settles it as a technical fact or the single sane path removes the question and is cited as evidence alongside `file:line`, while a genuine remaining trade-off still reaches you, with the advisor's view in the recommended answer. If the advisor is unavailable or leaves the point open, the question reaches you as usual. Approaches are compared only where a real fork exists. The direction is stated as short as the risk allows, at the altitude of boundaries and contracts rather than edits, and names what is left to the executor. Say "don't grill me" to switch to minimal questioning. It can also stress-test an existing plan or design document, producing revision notes instead of a new direction.
+Then it reads the relevant code, validation commands, and conventions, and clarifies the design by **grilling by default**: it settles only the decisions worth settling before code is written — those expensive to reverse, or where a competent implementer could reasonably go another way — asking one question at a time with a recommended answer, answering from the codebase instead of asking whenever it can, and treating the confirmed product conclusions as settled. In Claude Code a third rung sits between the codebase and you: a technical decision the code and conventions leave open, and that the agent cannot recommend with confidence, goes to the `dev:advisor` advisor first — an answer that settles it as a technical fact or the single sane path removes the question and is cited as evidence alongside `file:line`, while a genuine remaining trade-off still reaches you, with the advisor's view in the recommended answer. If the advisor is unavailable or leaves the point open, the question reaches you as usual. Approaches are compared only where a real fork exists. The direction is stated as short as the risk allows, at the altitude of boundaries and contracts rather than edits, and names what is left to the executor. Say "don't grill me" to switch to minimal questioning. It can also stress-test an existing plan or design document, producing revision notes instead of a new direction.
 
 Exploration ends with the **departure check**, a single structured question that settles everything at once:
 
@@ -35,13 +35,13 @@ Exploration ends with the **departure check**, a single structured question that
 2. **Execution mode** — one of three: subagent (opus), the default; subagent (others), an executor agent pinned to a non-Claude model served through your API relay; or self.
 3. **Autopilot** — confirmation that the chain now runs to completion unattended. A review pause after the plan is written is available as an explicit opt-in.
 
-### 2. Plan (`dev-write-plan`)
+### 2. Plan (`dev:write-plan`)
 
-`dev-write-plan` writes one plan per requirement under `wiki/plans/` as an **outcome contract**: the requirement — carrying the product conclusions when the change is perceptible — the settled decisions with their tradeoffs, landmines, a scope boundary, validation commands, done criteria, stop conditions, and an `Execution:` field carrying the mode chosen at the departure check — leaving implementation design to the executor. It never edits source code and never re-asks settled decisions; minor decisions that surface during planning are made following the approved direction and recorded in the plan.
+`dev:write-plan` writes one plan per requirement under `wiki/plans/` as an **outcome contract**: the requirement — carrying the product conclusions when the change is perceptible — the settled decisions with their tradeoffs, landmines, a scope boundary, validation commands, done criteria, stop conditions, and an `Execution:` field carrying the mode chosen at the departure check — leaving implementation design to the executor. It never edits source code and never re-asks settled decisions; minor decisions that surface during planning are made following the approved direction and recorded in the plan.
 
-When a requirement genuinely decomposes, it may become a **parallel plan group** instead of one plan — but only if the split passes all three parallel-safety criteria: disjoint scopes (shared surfaces such as manifests, route registration, and migrations go to a serial contract plan), a frozen contract between the members, and enough implementation bulk per member to outweigh the merge and review overhead. The canonical shape is contract plan → parallel members → integration plan. Parallelism is a byproduct of a split that meets the bar, not a goal.
+When a requirement genuinely decomposes, it may become a **parallel plan group** instead of one plan — but only if the split passes all three parallel-safety criteria: disjoint scopes (shared surfaces such as manifests, route registration, and migrations go to a serial contract plan), a frozen contract between the members, and enough implementation bulk per member to outweigh the merge and review overhead. The canonical shape is contract plan → parallel members → integration plan. A group is for a split that needs such a designed boundary; independent milestones inside one plan need no group — `dev:execute-plan` fans them out at dispatch (see below). Parallelism is a byproduct of a split that meets the bar, not a goal, and the plan's Direction states how its milestones depend on each other so the executor can read independence off the plan.
 
-### 3. Execute and review (`dev-execute-plan`)
+### 3. Execute and review (`dev:execute-plan`)
 
 Two execution modes, in default preference order:
 
@@ -56,11 +56,17 @@ Regardless of mode, the orchestrator verifies the result itself: it re-runs ever
 
 The roles are split deliberately: the delegated executor **implements only** — it writes the code and the tests the plan requires, but runs no validation commands at all. Every check runs on the orchestrator's side, cheapest first: mechanical checks (unit tests, typecheck, lint), then code review, then acceptance-tier verification — e2e/UI suites, anything needing a running app, browser, or external service, a verify skill. Failures return to the executor as concrete revision feedback carrying the error output. The executor's self-verification would never be accepted as evidence anyway, and self-validation invites fix-loops that bleed effort away from the implementation.
 
-For a **parallel group**, each member is dispatched into its own git worktree and branch; the orchestrator verifies each member as it finishes, then merges the passing branches back sequentially. Disjoint scopes make these merges conflict-free by construction — a merge conflict is evidence of a scope violation and is handled as a verification failure, never resolved silently.
+**Concurrent execution.** Under delegation the orchestrator decides, without asking, whether one plan runs as a single unit or as several **work packages** — one subagent per package, each in its own git worktree and branch cut from the recorded baseline. It reads the partition off the plan, never off the code: it splits only along milestones the plan declares (or plainly shows) to be independent, whose in-scope paths partition cleanly with no shared surface such as a manifest, registration, or barrel index, where each package is a slice of behaviour together with its tests, and where each package carries enough work to outweigh dispatch, dependency install, review, and merge. When in doubt, or when the plan is silent, the plan runs as one package — which is exactly today's behaviour. "Don't split" or "split this" in the conversation overrides the judgment.
+
+Each package is verified in its own worktree as it finishes — scope, milestone validations, full code review — then the passing branches are merged back one at a time, and the plan's commands, done criteria, a targeted coherence review, and the acceptance tier run once on the merged result. A wrong split is the orchestrator's mistake, not the plan's: a package that turns out to need a sibling's files, or two packages colliding at merge, falls back to finishing the remaining work serially on the merged branch — never a BLOCK.
+
+A **parallel group** uses the same mechanics, one worktree per member plan. Because the planner drew the members' disjoint scopes with exploration context, a merge conflict there is evidence of a scope violation and is handled as a verification failure, never resolved silently.
+
+Set expectations accordingly: work packages remove the authoring cost of a plan group for plans whose milestones are genuinely independent. They do not find parallelism the planner could not see, and most single-requirement plans still run as one package.
 
 ## Second opinion
 
-`dev-advisor` dispatches the host's generic subagent on the top Claude tier
+`dev:advisor` dispatches the host's generic subagent on the top Claude tier
 (`fable`) and briefs it as an advisor: review rather than implement, read the
 repository and run read-only commands such as `git diff` and non-mutating
 checks, answer. There is no advisor agent definition and no prompt template —
@@ -89,21 +95,22 @@ call and let the tie be broken on evidence.
 ## Example prompts
 
 ```text
-Use dev-explore to understand how authentication works in this repo.
-Use dev-explore to grill me about this refactoring idea before we plan it.
-Use dev-explore to stress-test wiki/plans/20260821-share-link-claim before we execute it.
+Use dev:explore to understand how authentication works in this repo.
+Use dev:explore to grill me about this refactoring idea before we plan it.
+Use dev:explore to stress-test wiki/plans/20260821-share-link-claim before we execute it.
 
-Use dev-write-plan to plan adding password reset support.
-Use dev-write-plan to turn this bug report into an implementation plan.
+Use dev:write-plan to plan adding password reset support.
+Use dev:write-plan to turn this bug report into an implementation plan.
 
-Use dev-execute-plan to implement wiki/plans/20260821-share-link-claim.
-Use dev-execute-plan to execute the next TODO plan.
-Use dev-execute-plan to delegate wiki/plans/20260822-rate-limit-headers to a subagent and review the result.
-Use dev-execute-plan to run plans 002 and 003 in parallel.
+Use dev:execute-plan to implement wiki/plans/20260821-share-link-claim.
+Use dev:execute-plan to execute the next TODO plan.
+Use dev:execute-plan to delegate wiki/plans/20260822-rate-limit-headers to a subagent and review the result.
+Use dev:execute-plan to run plans 002 and 003 in parallel.
+Use dev:execute-plan to implement wiki/plans/20260821-share-link-claim without splitting it.
 
-Use dev-advisor to get a second opinion before I commit to this approach.
-Use dev-advisor to check this design — I keep hitting the same error.
-Use dev-advisor to review what I just finished before we call it done.
+Use dev:advisor to get a second opinion before I commit to this approach.
+Use dev:advisor to check this design — I keep hitting the same error.
+Use dev:advisor to review what I just finished before we call it done.
 ```
 
 ## License

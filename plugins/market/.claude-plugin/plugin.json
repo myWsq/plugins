@@ -1,0 +1,19 @@
+{
+  "name": "market",
+  "version": "0.1.3",
+  "description": "Prepare and onboard Claude Code plugins into a user-selected marketplace using its delivery and contribution requirements.",
+  "author": {
+    "name": "Shuaiqi Wang",
+    "email": "wsq961@outlook.com",
+    "url": "https://github.com/myWsq"
+  },
+  "homepage": "https://github.com/myWsq/plugins",
+  "repository": "https://github.com/myWsq/plugins-builder",
+  "license": "MIT",
+  "keywords": [
+    "marketplace",
+    "plugin-onboarding",
+    "external-source",
+    "private-repository"
+  ]
+}

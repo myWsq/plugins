@@ -1,9 +1,9 @@
 ---
-name: commit-pr
-description: Commit, push, and open a pull request without ever switching the working tree's branch. Use when the user asks to open a PR, ship changes as a pull request, or says things like "open a PR", "commit and open a PR", "提交并开 PR". On the default branch it publishes the commit as a new remote branch instead of checking one out.
+name: pr
+description: "Commit, push, and open a pull request without ever switching the working tree's branch. Use when the user asks to open a PR, ship changes as a pull request, or says things like \"open a PR\", \"commit and open a PR\", \"提交并开 PR\". On the default branch it publishes the commit as a new remote branch instead of checking one out."
 ---
 
-# commit-pr
+# commit:pr
 
 The full ship-it flow: commit, push, open a pull request. Invoking this command is the explicit request to push and open a PR.
 

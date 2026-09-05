@@ -1,9 +1,9 @@
 ---
-name: arch-monorepo
-description: The owner's monorepo decision framework plus repository baseline — default to one monorepo per context (pnpm + turborepo, packages/ + apps/, changesets fixed versioning), and align the repo with the baseline: README.md for humans, AGENTS.md for agents with CLAUDE.md as a one-line pointer, a wiki/ knowledge base, MIT LICENSE, a stack-matched .gitignore, oxfmt + oxlint for TypeScript, and .agents/skills as the real project-skills directory with .claude/skills symlinked to it. Use when setting up, initializing, or aligning a repository ("set up this project", "初始化项目", "按我的规范调整这个项目") or when deciding repository structure and tooling ("该不该用 monorepo", "monorepo 选型", "怎么组织这个仓库").
+name: monorepo
+description: "The owner's monorepo decision framework plus repository baseline — default to one monorepo per context (pnpm + turborepo, packages/ + apps/, changesets fixed versioning), and align the repo with the baseline: README.md for humans, AGENTS.md for agents with CLAUDE.md as a one-line pointer, a wiki/ knowledge base, MIT LICENSE, a stack-matched .gitignore, oxfmt + oxlint for TypeScript, and .agents/skills as the real project-skills directory with .claude/skills symlinked to it. Use when setting up, initializing, or aligning a repository (\"set up this project\", \"初始化项目\", \"按我的规范调整这个项目\") or when deciding repository structure and tooling (\"该不该用 monorepo\", \"monorepo 选型\", \"怎么组织这个仓库\")."
 ---
 
-# arch-monorepo
+# arch:monorepo
 
 The owner's settled judgment on repository structure, in two parts: a **decision
 framework** — how to choose, with the reasons, so defaults can be overridden for

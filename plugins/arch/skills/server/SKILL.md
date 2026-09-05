@@ -1,9 +1,9 @@
 ---
-name: arch-server
-description: The owner's server-side selection framework — Node by default (Bun only for measured performance needs with compatible dependencies), the RavenJS framework learned through its raven-use skill, REST APIs with a typed TS client generated from the OpenAPI contract, Postgres + Drizzle, and E2E black-box tests only, written blind against the contract with real dependencies and no mocks. Use when starting or restructuring a backend ("build an API", "新建服务端项目") or when deciding the server stack ("服务端选型", "用什么框架/数据库", "服务端测试怎么写").
+name: server
+description: "The owner's server-side selection framework — Node by default (Bun only for measured performance needs with compatible dependencies), the RavenJS framework learned through its raven-use skill, REST APIs with a typed TS client generated from the OpenAPI contract, Postgres + Drizzle, and E2E black-box tests only, written blind against the contract with real dependencies and no mocks. Use when starting or restructuring a backend (\"build an API\", \"新建服务端项目\") or when deciding the server stack (\"服务端选型\", \"用什么框架/数据库\", \"服务端测试怎么写\")."
 ---
 
-# arch-server
+# arch:server
 
 The owner's settled judgment on server-side development. Like every `arch` skill,
 this is a decision framework: defaults with their reasons, so they can be
@@ -44,7 +44,7 @@ npx skills add myWsq/RavenJS
 
 Treat a RavenJS project without `raven-use` in its skills directory as
 misconfigured — install it before writing framework code. Keep the installed
-skill in the project's skills layout from `arch-monorepo` (`.agents/skills/` as
+skill in the project's skills layout from `arch:monorepo` (`.agents/skills/` as
 the real directory, `.claude/skills` symlinked to it).
 
 This document records the *selection*; `raven-use` owns the teaching. Do not
@@ -57,7 +57,7 @@ source of truth, exported as OpenAPI.
 
 **Contract path to the frontend**: generate a typed TS client from the OpenAPI
 export (openapi-ts / openapi-fetch family), and wrap it in the TanStack Query
-custom hooks that `arch-web` prescribes — types flow end to end, and contract
+custom hooks that `arch:web` prescribes — types flow end to end, and contract
 drift surfaces as type errors instead of runtime surprises. Do not hand-write the
 fetch layer.
 
@@ -79,7 +79,7 @@ black-box:
   the contract is wrong, fix the contract, not the test's knowledge of the
   internals.
 
-This differs from `arch-web` (no test code at all) by design: an API's contract
+This differs from `arch:web` (no test code at all) by design: an API's contract
 is stable and machine-checkable in a way UI behavior is not.
 
 ## Deliberate absences
