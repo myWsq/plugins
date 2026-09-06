@@ -31,8 +31,8 @@ The prompt contains:
 Dispatch via the host's subagent/task-spawning tool (such as Claude Code's `Agent` tool or an equivalent):
 
 - Pass the full prompt as the subagent's task.
-- Dispatch the host's generic subagent with the Claude tier alias the execution mode names as `model` — `opus` by default. For a non-Claude model the target is a model-pinned executor agent type — this plugin ships one per relay vendor, named `<vendor>-executor` — dispatched with no `model` argument, since a per-invocation override silently replaces the pinned model; see the skill's model-choice rules.
-- Before dispatching a relay-pinned executor, run the preflight from the skill's model-choice rules: confirm the pinned model ID appears in the relay's `/v1/models` listing; if absent, stop and report — do not dispatch into a silent fallback.
+- Dispatch the host's generic subagent with the Claude tier alias the execution mode names as `model` — `opus` by default. For a non-Claude model the target is a model-pinned executor agent type — this plugin ships one per relay vendor, exposed as `dev:<vendor>-executor` — dispatched with no `model` argument, since a per-invocation override replaces the pinned model; see the skill's model-choice rules.
+- Before dispatching a relay-pinned executor, use the hook-provided availability and host-visible binding from the skill's model-choice rules. Do not issue model-list requests. `PreToolUse(Agent)` checks cache freshness, known-unavailable bindings, and model overrides; respect a denial without substituting another executor. If availability is unverified or hooks are absent, report that limitation and preserve the user's selection.
 - Run in the background when the host supports it, so the orchestrator can monitor.
 - A single package works in the current repository on the current branch, inside the host's existing permission envelope. A concurrent unit works in the worktree and on the branch its prompt names.
 

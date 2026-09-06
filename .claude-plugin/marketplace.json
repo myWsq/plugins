@@ -11,7 +11,7 @@
     {
       "name": "dev",
       "source": "./plugins/dev",
-      "version": "0.17.0",
+      "version": "0.18.0",
       "description": "Plan-driven software development with subagent delegation: explore, plan, execute, and review.",
       "author": {
         "name": "Shuaiqi Wang",
@@ -50,7 +50,7 @@
     {
       "name": "coflux",
       "source": "./plugins/coflux",
-      "version": "0.4.0",
+      "version": "0.4.1",
       "description": "Connect Claude Code to the coflux agent command center: hooks report live turn states, the coflux skill teaches agents to externalize work into terminals the user can see and take over, and the bundled MCP config wires up the center's coflux MCP server.",
       "author": {
         "name": "Shuaiqi Wang",
