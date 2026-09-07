@@ -1,9 +1,11 @@
+import { execFile } from "node:child_process";
 import { createHash, randomUUID } from "node:crypto";
 import { mkdir, readFile, readdir, realpath, rename, rm, stat, writeFile } from "node:fs/promises";
 import { homedir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { setTimeout as delay } from "node:timers/promises";
+import { promisify } from "node:util";
 
 const NAME = /^[a-z0-9]+(?:-[a-z0-9]+)*-executor$/;
 const MODEL = /^[a-zA-Z0-9][a-zA-Z0-9._:/-]{0,199}$/;
@@ -192,15 +194,95 @@ async function snapshot({ env, input, agents, config, fetchImpl, now, requestTim
   }
 }
 
-function context(event, text) {
+function inject(event, text) {
   return { hookSpecificOutput: { hookEventName: event, additionalContext: text } };
+}
+
+// Every executor message is delimited so the orchestrator can locate it and tell it from repository content.
+function context(event, text) {
+  return inject(event, `<dev-executors>\n${text}\n</dev-executors>`);
 }
 
 function deny(reason) {
   return { hookSpecificOutput: { hookEventName: "PreToolUse", permissionDecision: "deny", permissionDecisionReason: reason } };
 }
 
-export async function runHook(input, { env = process.env, fetchImpl = globalThis.fetch, now = Date.now, requestTimeoutMs = 3000 } = {}) {
+const GIT_TIMEOUT_MS = 3000;
+const WORKSPACE_SKILLS = new Set(["dev:explore", "dev:write-plan"]);
+const execFileAsync = promisify(execFile);
+
+async function git(execFileImpl, cwd, args) {
+  const { stdout } = await execFileImpl("git", ["-C", cwd, ...args], {
+    env: { ...process.env, GIT_TERMINAL_PROMPT: "0", GIT_OPTIONAL_LOCKS: "0" },
+    timeout: GIT_TIMEOUT_MS,
+    maxBuffer: 1_048_576,
+    windowsHide: true
+  });
+  return String(stdout);
+}
+
+// Reads the session's own cwd: CLAUDE_PROJECT_DIR stays at the launch directory after a worktree switch.
+async function inspectWorkspace(cwd, execFileImpl, pending) {
+  let toplevel;
+  try {
+    toplevel = (await git(execFileImpl, cwd, ["rev-parse", "--show-toplevel"])).trim();
+  } catch (error) {
+    // git exits non-zero outside a repository; a missing binary or a timeout proves nothing.
+    return { kind: typeof error?.code === "number" ? "none" : "unknown" };
+  }
+  try {
+    const listing = await git(execFileImpl, cwd, ["worktree", "list", "--porcelain"]);
+    const first = listing.split(/\r?\n/).find((line) => line.startsWith("worktree "))?.slice(9);
+    const branch = (await git(execFileImpl, cwd, ["branch", "--show-current"])).trim();
+    const [current, main] = await Promise.all([toplevel, first ?? toplevel].map((path) => realpath(path).catch(() => path)));
+    const state = { kind: current === main ? "main" : "linked", toplevel: current, main, branch: branch || null };
+    if (pending) state.pending = (await git(execFileImpl, cwd, ["status", "--porcelain"])).split(/\r?\n/).filter(Boolean).length;
+    return state;
+  } catch { return { kind: "unknown" }; }
+}
+
+// Facts only, one `key: value` per line; the skills carry the semantics (staleness, fallback, what to do).
+function describeWorkspace(cwd, state) {
+  const line = (key, value) => `${key}: ${String(value).replace(/[\u0000-\u001f\u007f]/g, "?")}`;
+  const lines = [line("kind", state.kind)];
+  if (state.kind === "main" || state.kind === "linked") {
+    lines.push(line("path", state.toplevel));
+    if (state.kind === "linked") lines.push(line("main", state.main));
+    lines.push(line("branch", state.branch ?? "(detached HEAD)"));
+    if (Object.hasOwn(state, "pending")) lines.push(line("pending", state.pending));
+  } else if (state.kind === "none") lines.push(line("cwd", cwd));
+  else lines.push(line("reason", "git could not be run"));
+  return lines.join("\n");
+}
+
+async function workspaceContext(input, execFileImpl) {
+  const event = input.hook_event_name;
+  const skill = event === "PreToolUse" ? input.tool_input?.skill : null;
+  if (event === "PreToolUse" && (input.tool_name !== "Skill" || !WORKSPACE_SKILLS.has(skill))) return null;
+  const cwd = input.cwd || process.cwd();
+  const state = await inspectWorkspace(cwd, execFileImpl, event === "PreToolUse");
+  // `at` is either the literal session-start marker or one of the two allow-listed skill names.
+  return `<dev-workspace at="${skill ?? "session-start"}">\n${describeWorkspace(cwd, state)}\n</dev-workspace>`;
+}
+
+export async function runHook(input, { env = process.env, fetchImpl = globalThis.fetch, now = Date.now, requestTimeoutMs = 3000, execFileImpl = execFileAsync } = {}) {
+  const event = input?.hook_event_name;
+  if (event === "SessionStart") {
+    const [workspace, executors] = await Promise.all([
+      workspaceContext(input, execFileImpl),
+      executorHook(input, { env, fetchImpl, now, requestTimeoutMs })
+    ]);
+    const parts = [workspace, executors.hookSpecificOutput?.additionalContext].filter(Boolean);
+    return parts.length ? inject(event, parts.join("\n\n")) : {};
+  }
+  if (event === "PreToolUse" && input.tool_name === "Skill") {
+    const workspace = await workspaceContext(input, execFileImpl);
+    return workspace ? inject(event, workspace) : {};
+  }
+  return executorHook(input, { env, fetchImpl, now, requestTimeoutMs });
+}
+
+async function executorHook(input, { env, fetchImpl, now, requestTimeoutMs }) {
   const event = input?.hook_event_name;
   const target = input?.tool_input?.subagent_type;
   if (event !== "SessionStart" && event !== "PreToolUse") return {};
