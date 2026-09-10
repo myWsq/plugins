@@ -17,17 +17,13 @@ pinned commit.
   `Notification` to the `cofluxd hook claude` messenger, which forwards the
   event to the local daemon. The daemon maps events to turn states —
   active / approval / question / done — shown live in the coflux sidebar.
-  Inside a coflux session a few more hooks act: `SessionStart` prints the
-  session's coflux coordinates, a `PreToolUse` guard steers
-  `git worktree add|remove|move` to the coflux MCP workspace tools, and a
-  second `PreToolUse` guard denies `Bash(run_in_background: true)` and hands
-  back the equivalent `cofluxd terminal new` so long-running work stays
-  visible in the sidebar. A `PostToolUse` reporter broadcasts a
-  `cofluxd progress` line whenever a Bash call still ends up as a background
-  task the user cannot see (for example after a foreground timeout).
-- **`coflux` skill** — teaches an agent running inside a coflux terminal to
-  externalize long tasks, parallel work, and requests for help into real
-  terminals the user can see and take over. One rule: anything that closes
+  Inside a coflux session two more hooks act: `SessionStart` prints the
+  session's coflux coordinates, and a `PreToolUse` guard steers
+  `git worktree add|remove|move` to the coflux MCP workspace tools. The
+  plugin never intercepts the agent's own Bash calls otherwise.
+- **`coflux` skill** — documents, for an agent running inside a coflux
+  terminal, the terminals the user can see and take over, the progress and
+  notify channels, preview URLs, and when each is worth using. One rule: anything that closes
   locally uses the zero-credential local commands
   (`cofluxd terminal/progress/notify/ports`); only crossing workspace or
   device boundaries goes through the center's `coflux` MCP.
