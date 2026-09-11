@@ -17,10 +17,18 @@ pinned commit.
   `Notification` to the `cofluxd hook claude` messenger, which forwards the
   event to the local daemon. The daemon maps events to turn states —
   active / approval / question / done — shown live in the coflux sidebar.
-  Inside a coflux session two more hooks act: `SessionStart` prints the
-  session's coflux coordinates, and a `PreToolUse` guard steers
-  `git worktree add|remove|move` to the coflux MCP workspace tools. The
-  plugin never intercepts the agent's own Bash calls otherwise.
+  Inside a coflux session a few more hooks act. `SessionStart` asks the
+  daemon to locate the session's directory, then prints the session's coflux
+  coordinates (so resuming a session that had entered a worktree lands back
+  in it). `UserPromptSubmit` prints a `<coflux-session-moved>` block when the
+  working directory sits in a different coflux workspace than the terminal
+  does. `PostToolUse` on `EnterWorktree|ExitWorktree` and `WorktreeRemove`
+  follow the agent into git worktrees: the terminal's owning workspace moves
+  with it, an unknown worktree is registered as a child workspace first, and
+  on removal the terminals move back to the main workspace. A `PreToolUse`
+  guard steers `git worktree remove|move` to the coflux MCP workspace tools;
+  creating a worktree is not intercepted since coflux follows the agent into
+  it. The plugin never intercepts the agent's own Bash calls otherwise.
 - **`coflux` skill** — documents, for an agent running inside a coflux
   terminal, the terminals the user can see and take over (a job terminal that
   runs one command to completion with an exit code, or a session terminal: a
@@ -30,9 +38,10 @@ pinned commit.
   (`cofluxd terminal/progress/notify/ports`); only crossing workspace or
   device boundaries goes through the center's `coflux` MCP.
 - **`.mcp.json`** — declares the center's `coflux` MCP server (Streamable HTTP
-  + OAuth 2.1). The URL is `${COFLUX_MCP_URL:-https://api.coflux.dev/mcp}`:
-  inside a coflux PTY the daemon injects `COFLUX_MCP_URL` (self-hosted centers
-  resolve automatically); elsewhere it falls back to the public service. The
+  + OAuth 2.1) at the public URL `https://api.coflux.dev/mcp`, hard-coded so
+  that hosts which do not expand `${VAR}` in `.mcp.json` still parse it. For
+  a self-hosted center add a server by hand from the `COFLUX_MCP_URL` the
+  daemon injects: `claude mcp add --transport http coflux "$COFLUX_MCP_URL"`. The
   per-call `timeout` is 660 s to cover `wait_terminal`'s 600 s ceiling.
 
 ## Behavior and privacy

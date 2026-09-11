@@ -1,6 +1,6 @@
 ---
 name: coflux
-description: When you run inside a coflux terminal, this skill documents the local cofluxd commands that open terminals the user can watch and take over from the coflux web/mobile app, report progress, call the user and hand out preview URLs, plus the center MCP for reaching other workspaces and devices. Your coordinates (device / project / workspace / terminal) arrive in a <coflux-session> block at session start, or via the COFLUX_* environment variables. Inside your own workspace always use the zero-credential local cofluxd commands (open, read, wait, send, report progress, call the user, get preview URLs); use the center's coflux MCP only to leave this workspace (child workspaces, other workspaces or devices). Use when the user should be able to watch, step into or stop a command (interactive steps, dev servers, a job they are waiting on), when the user has to decide something, when you want to hand the user a clickable preview URL, or when you need an isolated child workspace for parallel work.
+description: When you run inside a coflux terminal, this skill documents the local cofluxd commands that open terminals the user can watch and take over from the coflux web/mobile app, report progress, call the user and hand out preview URLs, plus the center MCP for reaching other workspaces and devices. Your coordinates (device / project / workspace / terminal) arrive in a <coflux-session> block at session start, or via the COFLUX_* environment variables. For the workspace your cwd is in always use the zero-credential local cofluxd commands (open, read, wait, send, report progress, call the user, get preview URLs); use the center's coflux MCP only to reach beyond it (child workspaces, other workspaces or devices). Use when the user should be able to watch, step into or stop a command (interactive steps, dev servers, a job they are waiting on), when the user has to decide something, when you want to hand the user a clickable preview URL, or when you need an isolated child workspace for parallel work.
 ---
 
 # Working inside coflux
@@ -10,12 +10,12 @@ machines from a browser or a phone and take over at any time. This skill gives y
 user can see and take over, a progress line and a call button on the workspace card, preview URLs,
 and a way to operate the other workspaces and devices under the account when you need to.
 
-Two tracks, one rule: **whatever closes locally uses local commands; only leaving this
-workspace goes through MCP.**
+Two tracks, one rule: **whatever closes locally uses local commands; only reaching beyond the
+workspace you are in goes through MCP.**
 
 | Track | Credentials | Reach | Use for |
 |---|---|---|---|
-| Local commands `cofluxd terminal/progress/notify/ports` | none (the daemon identifies you by process tree) | **the workspace you are in** | open, read, wait, send, report progress, call the user, preview URLs: the default, fastest, no network dependency |
+| Local commands `cofluxd terminal/progress/notify/ports` | none (the daemon identifies you by process tree) | **the workspace your cwd is in** | open, read, wait, send, report progress, call the user, preview URLs: the default, fastest, no network dependency |
 | Center MCP `coflux` | one OAuth authorization by the user in the host | **the whole account**: every device, project, workspace and terminal | child workspaces (git worktrees), cross-workspace / cross-device access, joining from outside coflux |
 
 Of the local commands, `send`/`read`/`wait`/`notify`/`progress` complete entirely inside the
@@ -42,7 +42,7 @@ env | grep '^COFLUX_'
   |---|---|
   | `COFLUX_DEVICE_ID` | id of the device you run on (the id in `list_devices`) |
   | `COFLUX_PROJECT_ID` | owning project id; empty string for a directory workspace without a repository |
-  | `COFLUX_WORKSPACE_ID` | owning workspace id (the id in `list_workspaces`) |
+  | `COFLUX_WORKSPACE_ID` | the workspace this terminal was **opened** in (the id in `list_workspaces`). The variable is frozen when the terminal starts; the workspace the terminal *belongs to* can still change — see below. `cofluxd workspace` is the authority |
   | `COFLUX_TASK_ID` | id of this terminal (the taskId / terminalId used by local commands and `read_terminal`) |
   | `COFLUX_SESSION_ID` | id of this PTY session |
   | `COFLUX_MCP_URL` | the center's MCP URL; the user configures MCP with it |
@@ -52,6 +52,73 @@ env | grep '^COFLUX_'
   you just have no "where am I" coordinates). If the user insists you are inside a coflux terminal,
   this machine's daemon has not been upgraded: tell the user to run `cofluxd update && cofluxd restart`;
   after reopening the terminal the variables and the local commands are there.
+
+### Two workspaces to keep apart: owning and effective
+
+- **Owning workspace** = the workspace this terminal **belongs to**: what the user's sidebar shows it
+  under, what its turn state, branch and diff stats are attributed to. It starts out as
+  `COFLUX_WORKSPACE_ID` and moves with you when you enter or leave a git worktree (below).
+- **Effective workspace** = the workspace **your current working directory is inside**. This is what
+  every local command acts on.
+
+They are the same until your cwd wanders off. A plain `cd <path>` moves a *live* session — same
+conversation, no restart — and a coflux child workspace is a normal registered git worktree, so a
+session whose terminal belongs to workspace A can end up working inside workspace B. From that
+moment, in B:
+
+- `cofluxd terminal new` opens the terminal **in B**, under B in the user's sidebar, running in B's
+  directory, counting against B's terminal cap;
+- `cofluxd terminal list` lists B's terminals, and A's terminals answer `read` / `wait` / `send`
+  with "not in this workspace or does not exist" (`cd` back to A to reach them again);
+- MCP calls need **B's** id as `workspaceId`;
+- the terminal itself stays under A, and `progress`, `notify` and `ports` still belong to it,
+  whatever your cwd is; `COFLUX_TASK_ID` and `COFLUX_SESSION_ID` never change.
+
+If your cwd is outside every coflux workspace (say `/tmp`), local commands fall back to the owning
+workspace.
+
+A terminal opened before the daemon was upgraded is the one case with no owning workspace at all:
+its local commands are refused with "predates the daemon upgrade" whatever your cwd is, because the
+daemon never guesses ownership from a directory. Open a new terminal.
+
+### coflux follows you into a git worktree
+
+`EnterWorktree` switches this live session into a git worktree (its own, or an existing one you point
+it at), `ExitWorktree` switches back, and resuming a session that had entered one puts you straight
+back in it. **coflux comes along**: the terminal's *owning* workspace moves to the workspace that
+worktree is, and if coflux has never seen that worktree it registers it as a child workspace of this
+project first — a new card appears in the user's sidebar, with its branch and diff stats. Nothing is
+interrupted: same terminal, same PTY, same conversation, and the user keeps watching it where it now
+lives. When Claude Code cleans up its own worktree on exit, that workspace's terminals move back to
+the project's main workspace and the record disappears by itself.
+
+So, after entering or leaving a worktree, owning **and** effective are both the new workspace: pass
+its id to MCP tools and everything local already acts on it. The plugin drops the new id next to the
+tool result, and `cofluxd workspace` always tells you. Two things stay behind on purpose:
+
+- `COFLUX_WORKSPACE_ID` (and the id in the `<coflux-session>` block from earlier in this session)
+  still names where the terminal was *opened*; it is frozen when the PTY starts and cannot be
+  rewritten. Never reuse it after a move.
+- The shell inside this terminal keeps its own directory. That is only about the shell; it does not
+  affect where your work is attributed.
+
+Nothing happens when coflux cannot follow, and nothing is blocked either: another repository, a
+directory that is not a git repository, a terminal opened in a directory workspace (no project), or
+a daemon that is down or too old — the session just carries on with the ownership it had.
+
+### Ask where you are
+
+```sh
+cofluxd workspace
+{"workspaceId":"ws-b","path":"/Users/me/.coflux/worktrees/ws-b","owningWorkspaceId":"ws-a","moved":true}
+```
+
+One line of JSON: `workspaceId` (+ `path`) is the **effective** workspace, `owningWorkspaceId` is the
+workspace this terminal belongs to right now, and `moved` says whether they differ. With the plugin
+installed you also get a `<coflux-session-moved>` block at the start of every prompt while the two
+differ — but that block only arrives with the **next** user prompt. **About to call an MCP tool right
+after a `cd`? Run `cofluxd workspace` first** and use the `workspaceId` it prints; do not reuse
+`COFLUX_WORKSPACE_ID`.
 
 ## When to open a terminal
 
@@ -81,7 +148,8 @@ cofluxd terminal new --title="Debug shell"                                 # ses
 ```
 
 `--title` is the name the user sees in the sidebar; **name it properly**: "Run unit tests",
-"Start dev server", never "terminal 1". Either kind runs in the current workspace directory.
+"Start dev server", never "terminal 1". Either kind runs in the directory of the workspace your cwd
+is in (which is not always the one this terminal was opened in — see "owning and effective").
 
 Always write `--cmd=<value>` and `--title=<value>` with the `=`, never separated by a space: a
 value that starts with `-` is otherwise taken for another option and the call fails outright.
@@ -121,7 +189,7 @@ workspace as you).
 ### See how far it got
 
 ```sh
-cofluxd terminal list                      # every terminal in this workspace: id, state, exit code, title
+cofluxd terminal list                      # every terminal in the workspace your cwd is in: id, state, exit code, title
 cofluxd terminal read <taskId>             # a terminal's content (plain text, last 200 lines by default)
 cofluxd terminal read <taskId> --lines 50
 ```
@@ -223,16 +291,17 @@ server, use it to get the URL and tell the user directly; they click it and nobo
 
 Errors are one readable sentence; do what they say: "not inside a coflux terminal" = you are not
 in a coflux session; "terminal is not in this workspace or does not exist" = check the id with
-`list`; "predates the daemon upgrade" = that terminal was opened before the daemon upgrade, open a
-new one; a `new` without `--cmd` refused for a missing command = this machine's daemon is older
+`list`, and if you moved into another workspace that is exactly what a terminal of the other one
+looks like (`cofluxd workspace` to confirm, `cd` back to reach it); "predates the daemon upgrade" =
+that terminal was opened before the daemon upgrade, open a new one; a `new` without `--cmd` refused for a missing command = this machine's daemon is older
 than session terminals, tell the user to run `cofluxd update && cofluxd restart` (or pass a command
 and use a job terminal); "daemon is not connected to the center" only appears on
 `new`/`list`/`ports`, retry once it reconnects.
 
 ## Center MCP: leaving this workspace
 
-Local commands only see the workspace you are in. Use the MCP server named `coflux` in the host
-**only** for these:
+Local commands only see the workspace your cwd is in. Use the MCP server named `coflux` in the
+host **only** for these:
 
 - **Open an isolated child workspace to work in parallel**: `create_workspace` (project id from
   `$COFLUX_PROJECT_ID`) really runs `git worktree add` on the device; then `create_terminal` runs
@@ -242,11 +311,14 @@ Local commands only see the workspace you are in. Use the MCP server named `cofl
   `read_terminal` / `send_terminal_input`.
 - **Join everything under the account when you are not inside a coflux terminal** (for example
   Claude Code the user started on their own machine).
-- **Never run `git worktree add` yourself**: inside a coflux project the plugin blocks
-  `git worktree add|remove|move` and points you to `create_workspace` / `remove_workspace`; a
-  worktree you create is invisible to the user and cannot host a terminal.
+- **Deleting a workspace**: `remove_workspace` (it closes that workspace's terminals first, then
+  removes the worktree and the record). Inside a coflux project the plugin blocks
+  `git worktree remove|move` run by hand, because that leaves an orphan workspace record in the user's
+  sidebar. Creating a worktree is *not* blocked — coflux follows you into it (see above) — and Claude
+  Code's own worktrees need no cleanup from you at all.
 
-Do not detour through MCP for work inside this workspace: that is an extra round trip to the
+Do not detour through MCP for work inside the workspace you are in — including one you moved into
+with `cd` or EnterWorktree, where the local commands follow you: that is an extra round trip to the
 center, while a local command does it in one step.
 
 ### When MCP is not configured
@@ -268,8 +340,9 @@ it is set up, keep doing the work inside this workspace with local commands.
 
 The tool list and each tool's contract (parameters, limits, what an error means) come from the
 MCP server itself: read the tool descriptions in the host, they are the source of truth and this
-file does not repeat them. Take ids from the `COFLUX_*` variables first; for anything outside this
-workspace, find ids with the `list_*` tools.
+file does not repeat them. Take ids from the `COFLUX_*` variables first — except the workspace id
+after you moved, which comes from `cofluxd workspace` (or the `<coflux-session-moved>` block); for
+anything outside the workspace you are in, find ids with the `list_*` tools.
 
 The local-command disciplines apply to MCP just the same: `read_terminal` before
 `send_terminal_input`, stop when refused because the user is taking over (communicate with
@@ -282,8 +355,8 @@ The local-command disciplines apply to MCP just the same: `read_terminal` before
 - You can open, read, wait and type, but **typing is a restricted write with humans first**: you
   cannot write into a terminal the user is taking over (you are refused explicitly), and the user
   taking over at any time displaces you. Do not fight a human for a terminal.
-- Local commands only see **the workspace you are in**; other workspaces and other machines go
-  through MCP and are limited to the same account.
+- Local commands only see **the workspace your cwd is in** (`cofluxd workspace` says which one);
+  other workspaces and other machines go through MCP and are limited to the same account.
 - A workspace has a cap on concurrently live terminals (default 8, including the user's own).
   On hitting the cap, `list` first: usually some finished terminals were never collected. If the
   user really filled it up, `notify` them instead of forcing it.
@@ -291,4 +364,7 @@ The local-command disciplines apply to MCP just the same: `read_terminal` before
   user see" is their whole point. `send`/`read`/`wait`/`notify`/`progress` do not depend on the
   center. When disconnected they fail loudly rather than degrade silently.
 - `COFLUX_*` variables exist only in PTYs opened by coflux; exporting or changing them yourself
-  has no effect, the center only trusts the ids it issued.
+  has no effect, the center only trusts the ids it issued. `COFLUX_WORKSPACE_ID` always means the
+  workspace this terminal was **opened** in and goes stale the moment coflux follows you into a
+  worktree; both "where does this terminal belong now" and "where am I acting" come from
+  `cofluxd workspace`.
