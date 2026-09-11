@@ -198,6 +198,21 @@ function inject(event, text) {
   return { hookSpecificOutput: { hookEventName: event, additionalContext: text } };
 }
 
+function pluginRootOf(env) {
+  return env.CLAUDE_PLUGIN_ROOT || resolve(dirname(fileURLToPath(import.meta.url)), "..");
+}
+
+// The shipped working principles apply to every task, so they ride along with each session start (startup, resume, clear, compact).
+async function principlesContext(env) {
+  try {
+    const text = (await readFile(join(pluginRootOf(env), "hooks", "principles.md"), "utf8")).trim();
+    return text ? `<dev-principles>\n${text}\n</dev-principles>` : null;
+  } catch {
+    // A missing or unreadable file drops the block; it never blocks the session or the other snapshots.
+    return null;
+  }
+}
+
 // Every executor message is delimited so the orchestrator can locate it and tell it from repository content.
 function context(event, text) {
   return inject(event, `<dev-executors>\n${text}\n</dev-executors>`);
@@ -268,11 +283,12 @@ async function workspaceContext(input, execFileImpl) {
 export async function runHook(input, { env = process.env, fetchImpl = globalThis.fetch, now = Date.now, requestTimeoutMs = 3000, execFileImpl = execFileAsync } = {}) {
   const event = input?.hook_event_name;
   if (event === "SessionStart") {
-    const [workspace, executors] = await Promise.all([
+    const [principles, workspace, executors] = await Promise.all([
+      principlesContext(env),
       workspaceContext(input, execFileImpl),
       executorHook(input, { env, fetchImpl, now, requestTimeoutMs })
     ]);
-    const parts = [workspace, executors.hookSpecificOutput?.additionalContext].filter(Boolean);
+    const parts = [principles, workspace, executors.hookSpecificOutput?.additionalContext].filter(Boolean);
     return parts.length ? inject(event, parts.join("\n\n")) : {};
   }
   if (event === "PreToolUse" && input.tool_name === "Skill") {
@@ -288,7 +304,7 @@ async function executorHook(input, { env, fetchImpl, now, requestTimeoutMs }) {
   if (event !== "SessionStart" && event !== "PreToolUse") return {};
   if (event === "PreToolUse" && (input.tool_name !== "Agent" || typeof target !== "string"
     || (!NAME.test(target) && !target.startsWith("dev:")))) return {};
-  const pluginRoot = env.CLAUDE_PLUGIN_ROOT || resolve(dirname(fileURLToPath(import.meta.url)), "..");
+  const pluginRoot = pluginRootOf(env);
   const configRoot = env.CLAUDE_CONFIG_DIR || join(homedir(), ".claude");
   const projectRoot = env.CLAUDE_PROJECT_DIR || input.cwd || process.cwd();
   const discovered = await discover(pluginRoot, configRoot, projectRoot);
