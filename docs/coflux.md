@@ -22,8 +22,10 @@ pinned commit.
   `git worktree add|remove|move` to the coflux MCP workspace tools. The
   plugin never intercepts the agent's own Bash calls otherwise.
 - **`coflux` skill** — documents, for an agent running inside a coflux
-  terminal, the terminals the user can see and take over, the progress and
-  notify channels, preview URLs, and when each is worth using. One rule: anything that closes
+  terminal, the terminals the user can see and take over (a job terminal that
+  runs one command to completion with an exit code, or a session terminal: a
+  persistent login shell on a real tty, opened by passing no command), the
+  progress and notify channels, preview URLs, and when each is worth using. One rule: anything that closes
   locally uses the zero-credential local commands
   (`cofluxd terminal/progress/notify/ports`); only crossing workspace or
   device boundaries goes through the center's `coflux` MCP.
@@ -67,6 +69,7 @@ twice; the merged state stays correct, but the cost is pure waste.
 
 ```text
 Run the test suite in a coflux terminal so I can watch it and take over.
+Open a session terminal in this workspace that I can step into later.
 Use coflux to check why the coflux daemon looks offline.
 ```
 
