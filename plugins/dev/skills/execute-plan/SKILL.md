@@ -22,28 +22,28 @@ The plan is an outcome contract, not a step-by-step script: the executor designs
 
 ## Start contract
 
-Before handing work to the next phase, resolve these items internally. This is a completeness check, not a questionnaire. Reuse the current request, earlier user decisions, and inspected facts; record the source of each result briefly in the handoff or plan. Do not create a separate state file.
+These four items must carry a resolved value before work passes to the next phase. Resolve them from the current request, earlier user decisions, and inspected facts; whatever is genuinely the user's to decide is put to them at `dev:explore`'s two fixed gates — the product confirmation for a perceptible change, and the departure check — and is never re-asked afterwards. Resolving internally applies to factual questions only; it never cancels either gate. Record the source of each result briefly in the handoff or plan. Do not create a separate state file.
 
-- **Direction and scope**: resolve decisions that affect the outcome. Ask only about a concrete ambiguity or tradeoff that the request, code, and conventions cannot settle. Never ask whether the requirement or direction is confirmed; summarize settled conclusions without requiring a reply.
-- **Stop after**: `discussion`, `plan`, or `implementation` (including verification), derived from the user's requested scope. A discussion request ends in chat; a plan-only request ends after writing the plan; an implementation request continues through planning and execution. Ask only when the requested endpoint is genuinely unclear. Readiness is not authorization to expand scope, and silence is not approval.
-- **Execution**: reuse a user-selected mode and executor. Otherwise resolve the host-supported default using `dev:execute-plan`'s "Choose execution mode" rules when execution is needed; use `deferred` for discussion or plan-only work with no selection. Never ask for an executor just to finish a discussion or plan. A specified but unavailable executor is a blocker, not permission to substitute one.
+- **Direction and scope**: the decisions that affect the outcome. Answer from the request, the code, and local conventions wherever they settle it; grill out what they cannot settle one question at a time, and carry the result into the departure check.
+- **Stop after**: `discussion`, `plan`, or `implementation` (including verification). A discussion request ends in chat; a plan-only request ends after writing the plan; an implementation request continues through planning and execution. Derive `discussion` from the request — that path ends at the report and never reaches the departure check; `plan` and `implementation` are settled at the departure check's autopilot item. Readiness is not authorization to expand scope, and silence is not approval.
+- **Execution**: the mode and executor answered at the departure check. Reuse a recorded selection without re-asking. Use `deferred` only for discussion or plan-only work where no departure check settled it; resolve it when execution is actually needed, using `dev:execute-plan`'s "Choose execution mode" rules. A specified but unavailable executor is a blocker, not permission to substitute one.
 - **Workspace**: inspect the actual workspace and follow the planning/execution isolation rules, honoring an explicit request to stay. Check cleanliness, dependencies, and drift yourself at the phase that needs them; report concrete blockers instead of asking the user to perform routine checks.
 
-For each item, retain a value and its basis: user request/earlier decision, applicable default, inspected fact, or not applicable. Only an unresolved user decision needs a question; name the missing decision, not a generic confirmation. Do not advance dependent work while it remains unresolved. A later explicit user instruction overrides an older handoff or plan field; update the affected fields without reopening settled items.
+For each item, retain a value and its basis: departure-check answer, later user instruction, applicable default, inspected fact, or not applicable. A later explicit user instruction overrides an older handoff or plan field; update the affected fields without reopening settled items. Do not advance dependent work while a user decision remains unresolved.
 
-State the next action briefly and continue up to the requested endpoint. Discussion summaries carry the endpoint and any selected execution/workspace preferences; plans record `Execution:`, `Stop after:`, and `Workspace:` with a short basis. Pushing, opening PRs, and merging require an explicit user request; STOP and BLOCK conditions still apply.
+Once the departure check is answered, downstream skills treat its answers as standing authorization and run to the recorded endpoint without asking again. Discussion summaries carry the endpoint and the selected execution/workspace preferences; plans record `Execution:`, `Stop after:`, and `Workspace:` with a short basis. Pushing, opening PRs, and merging require an explicit user request; STOP and BLOCK conditions still apply.
 
 ## Workflow
 
 ### 1. Locate and read the plan
 
 - Use the user-provided plan id or path, or pick the next TODO plan from `wiki/plans/README.md`.
-- Read the full plan and any listed prerequisite plans. Read `Execution:`, `Stop after:`, and `Workspace:` when present, together with the current user request. Missing fields in older plans are resolved through the start contract, not a new confirmation gate. A current request to execute supersedes an older plan-only endpoint; without execution authorization, stop at the recorded endpoint.
+- Read the full plan and any listed prerequisite plans. Read `Execution:`, `Stop after:`, and `Workspace:` when present, together with the current user request — they record what the departure check settled. Fields missing from an older plan are resolved through the start contract, falling back to the execution-mode question below only when no departure check ever ran. A current request to execute supersedes an older plan-only endpoint; without execution authorization, stop at the recorded endpoint.
 - Stop if a prerequisite is not DONE.
 
 ### 2. Choose execution mode
 
-This section defines execution defaults and optional choices. Upstream skills reuse it when execution is requested; there is no mandatory execution-mode question.
+This section is the canonical definition of execution modes: upstream departure checks (`dev:explore`, `dev:write-plan`) read it by name to build their question instead of duplicating the wording.
 
 Two modes, in default preference order:
 
@@ -52,19 +52,26 @@ Two modes, in default preference order:
 
 Selection rules:
 
-1. Honor the latest explicit user selection, then a recorded handoff or plan selection. Do not re-confirm it. Legacy local-agent values (`agent:`-prefixed ids, or bare `codex`, `cursor`, `claude`) map to `subagent` as before.
-2. If no selection exists (including `Execution: deferred`), use generic subagent delegation when supported and permitted by the host; otherwise self-execute. State the resolved mode briefly and record it, without asking.
-3. A user-specified executor or model that cannot run is a blocker: report why and ask for a replacement only if needed. Never silently substitute it.
+1. If the user named a mode or executor in this conversation, use it — a current explicit instruction supersedes any recorded value.
+2. Otherwise, if a departure check already recorded an execution mode — in the handoff or in the plan's `Execution:` field — use it without asking. The departure check is standing authorization; do not re-confirm. Treat a legacy local-agent value (an `agent:`-prefixed id, or bare `codex`, `cursor`, `claude`) as `subagent`: that channel no longer exists, and a subagent stays inside the host's permission envelope, so no new consent boundary is crossed.
+3. If upstream asked to delegate but did not name a target, use a subagent.
+4. When no departure check happened and no mode was named — including `Execution: deferred` reaching actual execution — ask the execution-mode question defined below. This answer stands; do not ask again.
 
-If a default or generic delegation preference cannot be supported by the host, use self-execution and say so. This fallback does not override a user-specified executor or model.
+If a recorded or default delegation preference cannot be supported by the host, use self-execution and say so in the final report: the same host permission envelope is retained and no new consent boundary is crossed. This fallback does not override a user-specified executor or model.
 
-Model choice: use the host's generic subagent with `model: opus` only where that alias is supported; otherwise omit the override and use the host default. Honor a different model or executor selected by the user. A model-pinned executor agent is dispatched without a `model` argument, since an override replaces its pinned binding. Never infer host support from a Claude-specific example.
+Model choice: use the host's generic subagent with `model: opus` only where that alias is supported; otherwise omit the override and use the host default. Honor a different target recorded at the departure check or named by the user: another Claude tier alias goes to the generic subagent with that `model`. A model-pinned executor agent is dispatched without a `model` argument, since an override replaces its pinned binding. Never infer host support from a Claude-specific example.
 
 **Executor availability comes from hooks.** Use the latest injected `<dev-executors>` block, headed `Dev executor availability`: `verified` means its pinned ID was listed by the relay, `unavailable` means a complete listing excluded it or a model override conflicts, and `unverified` means discovery could not establish availability. The snapshot describes disk definitions, not the host's registry: intersect it with the agent types actually available in the host, and confirm the pinned ID in the host's agent description agrees with the snapshot. A disagreement requires reloading the agent definition and refreshing the session before dispatch; do not guess which binding will run. Never carry model IDs from memory, and never issue model-list requests or launch probe agents from this skill.
 
 The `SessionStart` hook discovers and caches availability; the `PreToolUse(Agent)` hook reuses a fresh cache or refreshes it before dispatch. Respect its denial, keep the user's chosen executor, and report the problem instead of silently substituting a model. A missing hook snapshot, an executor outside discovery's scope, or a failed listing is **unverified**, not unavailable: retain the host-visible option, label it unverified, and tell the user to verify actual serving via relay-side logs. This is also the fallback in hosts without these hooks. A model listing is not proof of which model ultimately served a run.
 
-**Optional executor selection.** Show choices only when the user asks to choose/change the executor or an actual blocker requires a replacement. Offer the host-supported generic subagent, host-visible pinned executors filtered by the hook rules above, and self-execution. List eligible pinned executors directly rather than asking "others" and then asking again. Label unverified candidates, omit unavailable ones, and retain an existing user selection unless the user changes it. Never run model discovery from the skill.
+The **execution-mode question** — asked here under selection rule 4, and by upstream departure checks that read this section — offers the following options, omitting any whose candidates have all been excluded:
+
+1. **Subagent (opus)** (recommended) — the host's generic subagent with `model: opus`, where the host supports that alias; otherwise the host's default model.
+2. **Subagent (pinned executor)** — the host-visible model-pinned executor types, filtered by the hook rules above. List the eligible vendors directly in the option description rather than asking "others" and then asking again — e.g. "gemini / kimi (unverified)" — marking any `unverified` entries explicitly and excluding `unavailable` ones. When more than one survives and the user picks this option, ask one structured follow-up choosing among them, first verified survivor recommended (or first unverified survivor when none is verified); skip the follow-up when only one survives. The follow-up is part of this question's contract — it never counts as re-asking. Omit this option when no candidate remains, and briefly explain if all discovered candidates are unavailable. Record the answer as mode `subagent` with the chosen executor agent. Consume the snapshot without running another discovery request.
+3. **Self** — self-execution.
+
+Outside this question, show executor choices only when the user asks to change the executor or an actual blocker requires a replacement; retain an existing selection unless the user changes it. Never run model discovery from the skill.
 
 ### 3. Preflight
 
