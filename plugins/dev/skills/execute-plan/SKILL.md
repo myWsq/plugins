@@ -26,7 +26,7 @@ These four items must carry a resolved value before work passes to the next phas
 
 - **Direction and scope**: the decisions that affect the outcome. Answer from the request, the code, and local conventions wherever they settle it; grill out what they cannot settle one question at a time, and carry the result into the departure check.
 - **Stop after**: `discussion`, `plan`, or `implementation` (including verification). A discussion request ends in chat; a plan-only request ends after writing the plan; an implementation request continues through planning and execution. Derive `discussion` from the request — that path ends at the report and never reaches the departure check; `plan` and `implementation` are settled at the departure check's autopilot item, which also sets **Plan review** (`none` or `advisor`): with `advisor`, `dev:write-plan` sends the finished plan to `dev:advisor`, revises it on the findings, and continues to `implementation` without stopping. Readiness is not authorization to expand scope, and silence is not approval.
-- **Execution**: the mode and executor answered at the departure check. Reuse a recorded selection without re-asking. Use `deferred` only for discussion or plan-only work where no departure check settled it; resolve it when execution is actually needed, using `dev:execute-plan`'s "Choose execution mode" rules. A specified but unavailable executor is a blocker, not permission to substitute one.
+- **Execution**: the mode answered at the departure check — `subagent(opus)`, `subagent(fable)`, or `self`. Reuse a recorded selection without re-asking. Use `deferred` only for discussion or plan-only work where no departure check settled it; resolve it when execution is actually needed, using `dev:execute-plan`'s "Choose execution mode" rules. A mode the host cannot support falls back per those rules and is reported, never silently.
 - **Workspace**: inspect the actual workspace and follow the planning/execution isolation rules, honoring an explicit request to stay. Check cleanliness, dependencies, and drift yourself at the phase that needs them; report concrete blockers instead of asking the user to perform routine checks.
 
 For each item, retain a value and its basis: departure-check answer, later user instruction, applicable default, inspected fact, or not applicable. A later explicit user instruction overrides an older handoff or plan field; update the affected fields without reopening settled items. Do not advance dependent work while a user decision remains unresolved.
@@ -47,31 +47,25 @@ This section is the canonical definition of execution modes: upstream departure 
 
 Two modes, in default preference order:
 
-1. **Subagent delegation (preferred)**: dispatch implementation to the host's generic subagent, using `opus` only when the host supports that alias; otherwise use the host's default model. Available whenever the host has a subagent/task-spawning tool (such as Claude Code's `Agent` tool or an equivalent). The subagent runs inside the host's existing permission envelope — no extra consent needed — and keeps the orchestrator's context free for review.
+1. **Subagent delegation (preferred)**: dispatch implementation to the host's generic subagent on a Claude tier — `opus` by default, `fable` when the user chooses it — passed as the `model` argument where the host supports that alias; otherwise omit the override and use the host's default model. Available whenever the host has a subagent/task-spawning tool (such as Claude Code's `Agent` tool or an equivalent). The subagent runs inside the host's existing permission envelope — no extra consent needed — and keeps the orchestrator's context free for review.
 2. **Self-execution**: implement directly. Always available; the fallback when the host has no subagent tool, or the right choice when implementation genuinely needs the orchestrator's full capability.
 
 Selection rules:
 
-1. If the user named a mode or executor in this conversation, use it — a current explicit instruction supersedes any recorded value.
-2. Otherwise, if a departure check already recorded an execution mode — in the handoff or in the plan's `Execution:` field — use it without asking. The departure check is standing authorization; do not re-confirm. Treat a legacy local-agent value (an `agent:`-prefixed id, or bare `codex`, `cursor`, `claude`) as `subagent`: that channel no longer exists, and a subagent stays inside the host's permission envelope, so no new consent boundary is crossed.
-3. If upstream asked to delegate but did not name a target, use a subagent.
+1. If the user named a mode or model in this conversation, use it — a current explicit instruction supersedes any recorded value.
+2. Otherwise, if a departure check already recorded an execution mode — in the handoff or in the plan's `Execution:` field — use it without asking. The departure check is standing authorization; do not re-confirm. Map a legacy value to `subagent(opus)` — an `agent:`-prefixed id, bare `codex`, `cursor`, `claude`, or a retired `dev:<vendor>-executor` agent type: those channels no longer exist, and a subagent stays inside the host's permission envelope, so no new consent boundary is crossed. State the mapping in the report.
+3. If upstream asked to delegate but did not name a target, use `subagent(opus)`.
 4. When no departure check happened and no mode was named — including `Execution: deferred` reaching actual execution — ask the execution-mode question defined below. This answer stands; do not ask again.
 
-If a recorded or default delegation preference cannot be supported by the host, use self-execution and say so in the final report: the same host permission envelope is retained and no new consent boundary is crossed. This fallback does not override a user-specified executor or model.
+If a recorded or default delegation preference cannot be supported by the host, use self-execution and say so in the final report: the same host permission envelope is retained and no new consent boundary is crossed. A tier alias the host does not support is dispatched to the generic subagent without the override, on the host's default model, and the report says so. Never dispatch any other agent type for implementation, never infer host support from a Claude-specific example, and never run model discovery or launch probe agents from this skill.
 
-Model choice: use the host's generic subagent with `model: opus` only where that alias is supported; otherwise omit the override and use the host default. Honor a different target recorded at the departure check or named by the user: another Claude tier alias goes to the generic subagent with that `model`. A model-pinned executor agent is dispatched without a `model` argument, since an override replaces its pinned binding. Never infer host support from a Claude-specific example.
+The **execution-mode question** — asked here under selection rule 4, and by upstream departure checks that read this section — offers exactly these options:
 
-**Executor availability comes from hooks.** Use the latest injected `<dev-executors>` block, headed `Dev executor availability`: `verified` means its pinned ID was listed by the relay, `unavailable` means a complete listing excluded it or a model override conflicts, and `unverified` means discovery could not establish availability. The snapshot describes disk definitions, not the host's registry: intersect it with the agent types actually available in the host, and confirm the pinned ID in the host's agent description agrees with the snapshot. A disagreement requires reloading the agent definition and refreshing the session before dispatch; do not guess which binding will run. Never carry model IDs from memory, and never issue model-list requests or launch probe agents from this skill.
-
-The `SessionStart` hook discovers and caches availability; the `PreToolUse(Agent)` hook reuses a fresh cache or refreshes it before dispatch. Respect its denial, keep the user's chosen executor, and report the problem instead of silently substituting a model. A missing hook snapshot, an executor outside discovery's scope, or a failed listing is **unverified**, not unavailable: retain the host-visible option, label it unverified, and tell the user to verify actual serving via relay-side logs. This is also the fallback in hosts without these hooks. A model listing is not proof of which model ultimately served a run.
-
-The **execution-mode question** — asked here under selection rule 4, and by upstream departure checks that read this section — offers the following options, omitting any whose candidates have all been excluded:
-
-1. **Subagent (opus)** (recommended) — the host's generic subagent with `model: opus`, where the host supports that alias; otherwise the host's default model.
-2. **Subagent (pinned executor)** — the host-visible model-pinned executor types, filtered by the hook rules above. List the eligible vendors directly in the option description rather than asking "others" and then asking again — e.g. "gemini / kimi (unverified)" — marking any `unverified` entries explicitly and excluding `unavailable` ones. When more than one survives and the user picks this option, ask one structured follow-up choosing among them, first verified survivor recommended (or first unverified survivor when none is verified); skip the follow-up when only one survives. The follow-up is part of this question's contract — it never counts as re-asking. Omit this option when no candidate remains, and briefly explain if all discovered candidates are unavailable. Record the answer as mode `subagent` with the chosen executor agent. Consume the snapshot without running another discovery request.
+1. **Subagent (opus)** (recommended) — the host's generic subagent with `model: opus`.
+2. **Subagent (fable)** — the host's generic subagent with `model: fable`, for implementation that needs the top tier.
 3. **Self** — self-execution.
 
-Outside this question, show executor choices only when the user asks to change the executor or an actual blocker requires a replacement; retain an existing selection unless the user changes it. Never run model discovery from the skill.
+Record the answer as `subagent(opus)`, `subagent(fable)`, or `self`. Outside this question, offer the options again only when the user asks to change the mode or an actual blocker requires a replacement; retain an existing selection unless the user changes it.
 
 ### 3. Preflight
 
@@ -154,7 +148,7 @@ Report:
 
 ```text
 Status: COMPLETE | STOPPED | APPROVE | REVISE | BLOCK
-Mode: self | subagent(+ model or executor agent)
+Mode: self | subagent(opus) | subagent(fable)
 Packages: one | <name>: <owned paths> — <worktree>, <branch> — <status>; ... — merge order: ...
 Evidence: validation results, scope check, diff/test review
 Changed files: ...
@@ -187,7 +181,6 @@ An integration plan that depends on a whole group runs afterward as a normal ser
 ## Stop conditions
 
 - Worktree is dirty before starting, beyond pending `wiki/plans/` files (which preflight commits).
-- A requested executor agent definition does not exist in the host.
 - Drift breaks a fact cited under the plan’s Decisions & tradeoffs.
 - Work requires files outside the plan's scope. A package needing a sibling package's files is not this — it is a partition error and takes the serial fallback.
 - Validation fails twice after one reasonable fix.
