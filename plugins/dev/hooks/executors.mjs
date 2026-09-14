@@ -1,6 +1,6 @@
 import { execFile } from "node:child_process";
 import { createHash, randomUUID } from "node:crypto";
-import { mkdir, readFile, readdir, realpath, rename, rm, stat, writeFile } from "node:fs/promises";
+import { mkdir, open, readFile, readdir, realpath, rename, rm, stat, writeFile } from "node:fs/promises";
 import { homedir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -224,6 +224,9 @@ function deny(reason) {
 
 const GIT_TIMEOUT_MS = 3000;
 const WORKSPACE_SKILLS = new Set(["dev:explore", "dev:write-plan"]);
+// The top Claude tier `dev:advisor` dispatches; an orchestrator already there gains nothing from it.
+const TOP_TIER = /fable/i;
+const TRANSCRIPT_TAIL_BYTES = 512 * 1024;
 const execFileAsync = promisify(execFile);
 
 async function git(execFileImpl, cwd, args) {
@@ -270,6 +273,48 @@ function describeWorkspace(cwd, state) {
   return lines.join("\n");
 }
 
+// The last model that answered in the transcript: the hook input only names the model at
+// session start, and `/model` can change it later. The file may lag the current turn, so
+// this is the model of the previous turn at worst — accurate enough for a tier check.
+async function transcriptModel(path) {
+  if (typeof path !== "string" || !path) return null;
+  let handle;
+  try {
+    handle = await open(path, "r");
+    const size = (await handle.stat()).size;
+    const length = Math.min(size, TRANSCRIPT_TAIL_BYTES);
+    const buffer = Buffer.alloc(length);
+    await handle.read(buffer, 0, length, size - length);
+    const lines = buffer.toString("utf8").split("\n");
+    if (length < size) lines.shift();
+    for (let i = lines.length - 1; i >= 0; i -= 1) {
+      if (!lines[i].includes('"assistant"')) continue;
+      try {
+        const entry = JSON.parse(lines[i]);
+        const model = entry?.type === "assistant" ? entry.message?.model : undefined;
+        if (typeof model === "string" && MODEL.test(model)) return model;
+      } catch {
+        // A torn or foreign line: keep scanning backwards.
+      }
+    }
+    return null;
+  } catch {
+    return null;
+  } finally {
+    await handle?.close().catch(() => {});
+  }
+}
+
+async function orchestratorContext(input) {
+  const event = input.hook_event_name;
+  const skill = event === "PreToolUse" ? input.tool_input?.skill : null;
+  if (event === "PreToolUse" && (input.tool_name !== "Skill" || !WORKSPACE_SKILLS.has(skill))) return null;
+  const declared = event === "SessionStart" && typeof input.model === "string" && MODEL.test(input.model) ? input.model : null;
+  const model = declared ?? await transcriptModel(input.transcript_path);
+  if (!model) return null;
+  return `<dev-orchestrator at="${skill ?? "session-start"}">\nmodel: ${model}\ntop-tier: ${TOP_TIER.test(model) ? "yes" : "no"}\n</dev-orchestrator>`;
+}
+
 async function workspaceContext(input, execFileImpl) {
   const event = input.hook_event_name;
   const skill = event === "PreToolUse" ? input.tool_input?.skill : null;
@@ -283,17 +328,19 @@ async function workspaceContext(input, execFileImpl) {
 export async function runHook(input, { env = process.env, fetchImpl = globalThis.fetch, now = Date.now, requestTimeoutMs = 3000, execFileImpl = execFileAsync } = {}) {
   const event = input?.hook_event_name;
   if (event === "SessionStart") {
-    const [principles, workspace, executors] = await Promise.all([
+    const [principles, workspace, orchestrator, executors] = await Promise.all([
       principlesContext(env),
       workspaceContext(input, execFileImpl),
+      orchestratorContext(input),
       executorHook(input, { env, fetchImpl, now, requestTimeoutMs })
     ]);
-    const parts = [principles, workspace, executors.hookSpecificOutput?.additionalContext].filter(Boolean);
+    const parts = [principles, workspace, orchestrator, executors.hookSpecificOutput?.additionalContext].filter(Boolean);
     return parts.length ? inject(event, parts.join("\n\n")) : {};
   }
   if (event === "PreToolUse" && input.tool_name === "Skill") {
-    const workspace = await workspaceContext(input, execFileImpl);
-    return workspace ? inject(event, workspace) : {};
+    const [workspace, orchestrator] = await Promise.all([workspaceContext(input, execFileImpl), orchestratorContext(input)]);
+    const parts = [workspace, orchestrator].filter(Boolean);
+    return parts.length ? inject(event, parts.join("\n\n")) : {};
   }
   return executorHook(input, { env, fetchImpl, now, requestTimeoutMs });
 }

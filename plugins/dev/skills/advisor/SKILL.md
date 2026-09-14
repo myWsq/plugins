@@ -1,6 +1,6 @@
 ---
 name: advisor
-description: "Consult a top-tier read-only advisor before committing to an approach or declaring work done. Use before substantive work on a multi-step task, when stuck with recurring errors or a non-converging approach, when considering a change of approach, or when the user asks for a second opinion on the direction (\"问一下 advisor\", \"找个更强的模型看看\", \"让 advisor 审一遍这个方案\"). The advisor answers; it does not do the work."
+description: "Consult a top-tier read-only advisor on a design, an approach, or finished work. Invoke only on explicit request: when the user asks for it by name or asks for a second opinion (\"问一下 advisor\", \"找个更强的模型看看\", \"让 advisor 审一遍这个方案\"), or when another dev skill names it for a specific step. Never invoke it on your own judgment. The advisor answers; it does not do the work."
 ---
 
 # dev:advisor
@@ -16,22 +16,15 @@ worse than no advisor.
 
 ## When to call
 
-Call **before substantive work** — before writing, before committing to an
-interpretation, before building on an assumption. Orientation first is fine:
-finding files, reading a source, seeing what is there. Orientation is not
-substantive work. Writing, editing, and declaring an answer are.
+Only when called for. Two triggers, nothing else:
 
-Also call:
+- The user asks for it explicitly — by name, or by asking for a second opinion
+  on a direction, a design, or finished work.
+- Another dev skill names `dev:advisor` for a specific step of its flow.
 
-- When the work looks complete, before declaring it done.
-- When stuck: errors recurring, approach not converging, results that do not fit.
-- When considering a change of approach.
-
-On tasks longer than a few steps, call at least once before committing to an
-approach and once before declaring done. A task that is one edit and one check
-gets no call at all. On short reactive tasks where the next action follows from
-tool output you just read, the first call — before the approach crystallizes —
-is the only one worth making.
+Do not call it on your own judgment. Feeling stuck, facing a long task, or
+being about to declare work done are not triggers; if a consultation seems
+worth it, say so to the user in a line and let them decide.
 
 ## The brief
 
