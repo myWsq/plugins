@@ -11,18 +11,17 @@ The division of labor: the orchestrating agent clarifies what the consumer of th
 | `dev:explore` | Read-only exploration: for a change its consumer can perceive, clarify the product first — interaction flow, states, UI structure, scope — from the product surface and confirm it; then map the relevant code, grill the technical design question by question until it holds up, compare approaches, and close with the departure check. Can also stress-test an existing plan or design. | Product conclusions when the change is perceptible, a codebase map, resolved decisions, an approved direction, and the departure-check answers. |
 | `dev:write-plan` | Turn the converged requirement into a self-contained outcome contract — or, when it decomposes safely, a parallel plan group (contract → parallel members → integration). From the repository's main worktree, it first cuts a branch and worktree named after the requirement and continues there. | `wiki/plans/YYYYMMDD-*.md` plus the `wiki/plans/README.md` index — on a `dev/YYYYMMDD-*` branch under `.claude/worktrees/` when it moved off the main worktree. |
 | `dev:execute-plan` | Execute a plan on the current branch — fanning it out into concurrent work packages in per-package worktrees when its milestones are independent — or a parallel group concurrently in per-plan worktrees, by default dispatching implementation to a host subagent using `opus` where supported, otherwise the host default, then verify every done criterion, review the diff, and merge. | Implementation commits and plan status updates on the current branch. |
-| `dev:advisor` | Brief a top-tier subagent as a read-only advisor reading with fresh context. Runs only when you ask for it by name or for a second opinion, or when another dev skill names it for a step; never on the agent's own initiative. | Review findings and a direction to keep or change. It reviews; it does not implement. |
 
 The skills can be used independently, but they are designed to run as a chain:
 
 ```text
-dev:explore ──> dev:write-plan ──[dev:advisor]──> dev:execute-plan
- discussion       plan            optional review  implementation + verification
+dev:explore ──> dev:write-plan ──[plan audit]──> dev:execute-plan
+ discussion       plan            optional audit   implementation + verification
 ```
 
-`dev:advisor` appears in the chain only as that optional plan review, chosen at the departure check. Outside it the advisor is not part of any phase: it runs whenever you ask for a second opinion, at any point.
+The plan audit appears in the chain only as that optional review, chosen at the departure check. It is not a skill you invoke: for a second opinion at any other moment, use what your host provides — in Claude Code, its built-in advisor.
 
-The departure check determines where the chain stops: discussion ends in chat, the review pause ends after writing the plan, and autopilot continues through execution and verification — optionally with an advisor review of the finished plan on the way. Readiness does not expand authorization. STOP and BLOCK conditions still halt the chain — those are safety stops, not confirmations — and pushing, opening PRs, or merging always require an explicit user request.
+The departure check determines where the chain stops: discussion ends in chat, the review pause ends after writing the plan, and autopilot continues through execution and verification — optionally with an audit of the finished plan on the way. Readiness does not expand authorization. STOP and BLOCK conditions still halt the chain — those are safety stops, not confirmations — and pushing, opening PRs, or merging always require an explicit user request.
 
 ## How the flow works
 
@@ -36,7 +35,7 @@ Exploration then closes with the **departure check** — the workflow's last con
 
 1. **Direction** — the approved direction, restated in one or two sentences.
 2. **Execution mode** — the question defined canonically in `dev:execute-plan`: the generic subagent on `opus`, the generic subagent on `fable`, or self-execution. Answering here is final.
-3. **Autopilot** — confirm that `dev:write-plan` and `dev:execute-plan` then run to completion without further confirmation, take the **review pause** to stop and read the plan first, or take the **advisor review**: `dev:write-plan` sends the finished plan to `dev:advisor`, revises it on the findings, and continues into execution without stopping. The advisor review is the recommended default whenever the advisor is available — the skill installed, a subagent tool present, and the orchestrator not already on the advisor's tier; otherwise the option is omitted and plain autopilot is recommended.
+3. **Autopilot** — confirm that `dev:write-plan` and `dev:execute-plan` then run to completion without further confirmation, take the **review pause** to stop and read the plan first, or take the **plan audit**: `dev:write-plan` sends the finished plan to a top-tier subagent that reads the code itself, revises it on the findings, and continues into execution without stopping. The plan audit is the recommended default whenever it is available — a subagent tool present and the orchestrator not already on the audit's tier; otherwise the option is omitted and plain autopilot is recommended.
 
 The workspace is not one of them. Where the work happens is read off the injected `<dev-workspace>` block rather than confirmed: from the main worktree `dev:write-plan` cuts the requirement's branch and worktree and continues there; inside a linked worktree it stays put. The departure check states which of the two will happen, along with any pending changes that would stop the move, as information — saying "plan here" is still an override, it is just no longer a question.
 
@@ -49,7 +48,7 @@ Expected behavior for common requests:
 | "Implement this with opus and verify it." | Reuse the named model at the departure check's execution item rather than offering the menu; still confirm direction and autopilot once. |
 | "Think through how this could work." | Discuss and stop; no departure check, no execution question. |
 | "Write a plan first; I want to review it." | Take the review pause at the departure check; write the plan and stop. |
-| "Have the advisor check the plan, then go ahead." | Take the advisor review at the departure check; write the plan, revise it on the advisor's findings, and continue into execution. |
+| "Audit the plan, then go ahead." | Take the plan audit at the departure check; write the plan, revise it on the findings, and continue into execution. |
 | "Now execute that plan." | Resume with the recorded execution mode; do not re-run the departure check. |
 | The host has no subagent tool | Fall back to self-execution and say so in the report; no other agent type is ever substituted. |
 | A material product decision remains open | Settle it in step 2's product confirmation before the technical grilling starts. |
@@ -58,11 +57,11 @@ Expected behavior for common requests:
 
 `dev:write-plan` writes one plan per requirement under `wiki/plans/` as an **outcome contract**: the requirement — carrying the product conclusions when the change is perceptible — the settled decisions with their tradeoffs, landmines, a scope boundary, validation commands, done criteria, stop conditions, and `Execution:`, `Stop after:`, `Plan review:`, and `Workspace:` fields carrying the departure-check answers and their basis — leaving implementation design to the executor. It never edits source code and never re-asks settled decisions; minor decisions that surface during planning are made following the approved direction and recorded in the plan.
 
-Under `Plan review: advisor` it sends the finished plan to `dev:advisor` once before handoff. Findings inside the approved direction — a loosely worded decision, a missing landmine, a scope or done-criteria gap, a wrong command — are folded into the plan and marked `(revised on advisor review)`; a finding that undermines the direction or the requirement itself is a STOP, reported to you with its evidence. If the advisor cannot be dispatched, the plan is not executed unreviewed: the chain falls back to the review pause and waits for you. When the orchestrator itself already runs on the advisor's tier — the hook-injected `<dev-orchestrator>` block says `top-tier: yes` — the departure check does not offer the review and `dev:write-plan` skips it, recording why in the plan.
+Under `Plan review: audit` it sends the finished plan to a top-tier subagent once before handoff, following `references/plan-audit.md`. Findings inside the approved direction — a loosely worded decision, a missing landmine, a scope or done-criteria gap, a wrong command — are folded into the plan and marked `(revised on plan audit)`; a finding that undermines the direction or the requirement itself is a STOP, reported to you with its evidence. If the audit cannot be dispatched, the plan is not executed unreviewed: the chain falls back to the review pause and waits for you. When the orchestrator itself already runs on the audit's tier — the hook-injected `<dev-orchestrator>` block says `top-tier: yes` — the departure check does not offer the review and `dev:write-plan` skips it, recording why in the plan.
 
 **Off the main worktree.** When the session is in the repository's main worktree — on any branch — `dev:write-plan` first cuts a branch `dev/YYYYMMDD-slug` and a worktree `.claude/worktrees/YYYYMMDD-slug` from the current `HEAD`, named after the requirement with the same id as the plan, and switches the session into it. The plan commit, the implementation commits, and the status updates all land on that branch; the main worktree keeps its branch untouched, and merging back is yours to request. A dirty tree stops the move rather than leaving uncommitted changes behind; the agent reports the pending changes. The planner installs nothing there — `dev:execute-plan` installs dependencies at preflight. Say "plan here", or start from an existing linked worktree, to skip the move.
 
-In Claude Code the plugin's hooks tell the agent where it is instead of leaving it to probe git: a command hook (`hooks/context.mjs`, Node.js 22 or later on `PATH`) injects a `<dev-workspace>` block — `kind` main or linked, `path`, `branch` — at session start (including resume and compaction, computed from the session's current directory), and refreshes it with a `pending` entry count whenever `dev:explore` or `dev:write-plan` starts. At the same moments it injects a `<dev-orchestrator>` block — `model`, the active model identifier, and `top-tier`, whether that model is the tier `dev:advisor` dispatches — taken from the hook's `model` field at session start and otherwise from the last assistant entry in the session transcript, so a `/model` switch is picked up by the next skill start; when neither source names a model the block is omitted rather than guessed. The skills read the latest block and fall back to `git worktree list` and `git status --porcelain` only when none is present or a worktree switch has superseded it, so other hosts keep working. Every injection from the plugin is delimited this way so the agent can locate it and tell it from repository content; the blocks carry facts, and what to do with them lives in the skills. The hook never blocks a tool call: a failed snapshot injects nothing.
+In Claude Code the plugin's hooks tell the agent where it is instead of leaving it to probe git: a command hook (`hooks/context.mjs`, Node.js 22 or later on `PATH`) injects a `<dev-workspace>` block — `kind` main or linked, `path`, `branch` — at session start (including resume and compaction, computed from the session's current directory), and refreshes it with a `pending` entry count whenever `dev:explore` or `dev:write-plan` starts. At the same moments it injects a `<dev-orchestrator>` block — `model`, the active model identifier, and `top-tier`, whether that model is the tier the plan audit dispatches — taken from the hook's `model` field at session start and otherwise from the last assistant entry in the session transcript, so a `/model` switch is picked up by the next skill start; when neither source names a model the block is omitted rather than guessed. The skills read the latest block and fall back to `git worktree list` and `git status --porcelain` only when none is present or a worktree switch has superseded it, so other hosts keep working. Every injection from the plugin is delimited this way so the agent can locate it and tell it from repository content; the blocks carry facts, and what to do with them lives in the skills. The hook never blocks a tool call: a failed snapshot injects nothing.
 
 **Working principles ride with every session.** The plugin ships `hooks/principles.md` — how to communicate, which instruction wins, how to execute, test, and delegate — and the same `SessionStart` hook injects it verbatim as a `<dev-principles>` block on startup, resume, clear, and compaction, so the guidance survives context compaction without being repeated on every prompt. Unlike the other two blocks it carries guidance, not facts: it applies to every task in the session, whether or not a `dev` skill runs. It ranks below system and platform constraints and below the user's current explicit instruction, and a project's `AGENTS.md` supplements or overrides it within that project. Skill starts never re-inject it. Edit the file to change the guidance; a missing or empty file just drops the block.
 
@@ -93,35 +92,32 @@ A **parallel group** uses the same mechanics, one worktree per member plan. Beca
 
 Set expectations accordingly: work packages remove the authoring cost of a plan group for plans whose milestones are genuinely independent. They do not find parallelism the planner could not see, and most single-requirement plans still run as one package.
 
-## Second opinion
+## Plan audit
 
-`dev:advisor` dispatches the host's generic subagent on the top Claude tier
-(`fable`) and briefs it as an advisor: review rather than implement, read the
-repository and run read-only commands such as `git diff` and non-mutating
-checks, answer. There is no advisor agent definition and no prompt template —
-the skill states the principles every brief must carry (the role, the
-read-only boundary, the shape of a useful answer), and the orchestrator writes
-each brief in its own words. Pass the tier explicitly: a subagent dispatched
-without a `model` inherits the orchestrator's, and an advisor at or below the
-model it reviews is worse than none.
+Under `Plan review: audit`, `dev:write-plan` dispatches the host's generic
+subagent on the top Claude tier (`fable`) and briefs it as a reviewer: audit
+rather than implement, read the repository and run read-only commands such as
+`git diff` and non-mutating checks, answer. There is no reviewer agent
+definition and no prompt template — `dev:write-plan`'s
+`references/plan-audit.md` states the principles every brief must carry (the
+role, the read-only boundary, the shape of a useful answer), and the
+orchestrator writes each brief in its own words. Pass the tier explicitly: a
+subagent dispatched without a `model` inherits the orchestrator's, and a
+reviewer at or below the model it reviews is worse than none.
 
-Its leverage is not only the tier. It arrives with fresh context, reads the code
-itself instead of trusting your account of it, and is asked for a verdict rather
-than a diff — so what comes back is a judgment you act on, not work you have to
-review.
+Its leverage is not only the tier. It arrives with fresh context, reads the
+code itself instead of trusting the plan's account of it, and is asked for a
+verdict rather than a diff — so what comes back is a judgment you act on, not
+work you have to review. That is also what a reviewer reading only the
+conversation cannot do: check a `file:line` the plan cites but nobody opened,
+or a validation command nobody ran.
 
-It runs only when called for: when you ask for it by name or ask for a second
-opinion, or when another dev skill names it for a specific step. The agent does
-not decide on its own that a task is long, stuck, or done enough to warrant a
-consultation; if it thinks one would help, it says so and leaves the call to
-you. Today one skill names it: `dev:write-plan` sends the finished plan to it
-when the departure check chose the advisor review.
-
-The advisor does not inherit the conversation. State the problem, the
-constraints, and the specific question, and point at the code rather than
-summarizing it — it reads the files itself. When its advice contradicts data
-you already retrieved, do not switch silently: name the conflict in one more
-call and let the tie be broken on evidence.
+The audit has exactly one trigger: the departure check chose it. There is no
+skill to invoke by name and no path for the agent to start one on its own
+judgment. For a second opinion at any other moment — mid-implementation, on a
+design, on finished work — use what your host provides; Claude Code has a
+built-in advisor for exactly that, and this plugin deliberately leaves that
+job to it.
 
 ## Example prompts
 
@@ -138,10 +134,6 @@ Use dev:execute-plan to execute the next TODO plan.
 Use dev:execute-plan to delegate wiki/plans/20260822-rate-limit-headers to a subagent and review the result.
 Use dev:execute-plan to run plans 002 and 003 in parallel.
 Use dev:execute-plan to implement wiki/plans/20260821-share-link-claim without splitting it.
-
-Use dev:advisor to get a second opinion before I commit to this approach.
-Use dev:advisor to check this design — I keep hitting the same error.
-Use dev:advisor to review what I just finished before we call it done.
 ```
 
 ## License

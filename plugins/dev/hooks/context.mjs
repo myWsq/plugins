@@ -7,7 +7,7 @@ import { promisify } from "node:util";
 const MODEL = /^[a-zA-Z0-9][a-zA-Z0-9._:/-]{0,199}$/;
 const GIT_TIMEOUT_MS = 3000;
 const WORKSPACE_SKILLS = new Set(["dev:explore", "dev:write-plan"]);
-// The top Claude tier `dev:advisor` dispatches; an orchestrator already there gains nothing from it.
+// The top Claude tier the plan audit dispatches; an orchestrator already there gains nothing from it.
 const TOP_TIER = /fable/i;
 const TRANSCRIPT_TAIL_BYTES = 512 * 1024;
 const execFileAsync = promisify(execFile);
