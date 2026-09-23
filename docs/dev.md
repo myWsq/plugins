@@ -19,7 +19,7 @@ dev:explore ──> dev:write-plan ──[plan audit]──> dev:execute-plan
  discussion       plan            optional audit   implementation + verification
 ```
 
-The plan audit appears in the chain only as that optional review, chosen at the departure check. It is not a skill you invoke: for a second opinion at any other moment, use what your host provides — in Claude Code, its built-in advisor.
+The plan audit appears in the chain only as that optional review, chosen at the departure check. It is not a skill you invoke: for a second opinion during exploration or planning, use what your host provides — in Claude Code, its built-in advisor. Execution deliberately goes without one; see below.
 
 The departure check determines where the chain stops: discussion ends in chat, the review pause ends after writing the plan, and autopilot continues through execution and verification — optionally with an audit of the finished plan on the way. Readiness does not expand authorization. STOP and BLOCK conditions still halt the chain — those are safety stops, not confirmations — and pushing, opening PRs, or merging always require an explicit user request.
 
@@ -84,6 +84,8 @@ Regardless of mode, the orchestrator verifies the result itself: it re-runs ever
 
 The roles are split deliberately: the delegated executor **implements only** — it writes the code and the tests the plan requires, but runs no validation commands at all. Every check runs on the orchestrator's side, cheapest first: mechanical checks (unit tests, typecheck, lint), then code review, then acceptance-tier verification — e2e/UI suites, anything needing a running app, browser, or external service, a verify skill. Failures return to the executor as concrete revision feedback carrying the error output. The executor's self-verification would never be accepted as evidence anyway, and self-validation invites fix-loops that bleed effort away from the implementation.
 
+Nobody consults the host's advisor during execution — not the executor, not a self-executing orchestrator, not the verifying one — overriding the host's own guidance to do so. Second opinions belong where the design is still open: exploration, and the optional plan audit. Once a plan exists, whatever it leaves open is the executor's call, reported and then judged in verification; an advisor call blocks the turn, and an executor would pay for one at every milestone.
+
 **Concurrent execution.** Under delegation the orchestrator decides, without asking, whether one plan runs as a single unit or as several **work packages** — one subagent per package, each in its own git worktree and branch cut from the recorded baseline. It reads the partition off the plan, never off the code: it splits only along milestones the plan declares (or plainly shows) to be independent, whose in-scope paths partition cleanly with no shared surface such as a manifest, registration, or barrel index, where each package is a slice of behaviour together with its tests, and where each package carries enough work to outweigh dispatch, dependency install, review, and merge. When in doubt, or when the plan is silent, the plan runs as one package — which is exactly today's behaviour. "Don't split" or "split this" in the conversation overrides the judgment.
 
 Each package is verified in its own worktree as it finishes — scope, milestone validations, full code review — then the passing branches are merged back one at a time, and the plan's commands, done criteria, a targeted coherence review, and the acceptance tier run once on the merged result. A wrong split is the orchestrator's mistake, not the plan's: a package that turns out to need a sibling's files, or two packages colliding at merge, falls back to finishing the remaining work serially on the merged branch — never a BLOCK.
@@ -114,10 +116,11 @@ or a validation command nobody ran.
 
 The audit has exactly one trigger: the departure check chose it. There is no
 skill to invoke by name and no path for the agent to start one on its own
-judgment. For a second opinion at any other moment — mid-implementation, on a
-design, on finished work — use what your host provides; Claude Code has a
-built-in advisor for exactly that, and this plugin deliberately leaves that
-job to it.
+judgment. For a second opinion at any other moment of exploration or
+planning — on a design, on a draft — use what your host provides; Claude Code
+has a built-in advisor for exactly that, and this plugin deliberately leaves
+that job to it. `dev:execute-plan` does not consult it at all: by then the
+design is settled, and each call would stall the implementation.
 
 ## Example prompts
 

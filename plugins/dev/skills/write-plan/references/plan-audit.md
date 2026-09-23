@@ -2,8 +2,8 @@
 
 Use this reference when `dev:write-plan` runs step 5 under `Plan review: audit`.
 Nothing else dispatches this reviewer, and there is no user-invoked path into
-it: a user who wants a second opinion mid-task has the host's own facilities
-for that.
+it: a user who wants a second opinion while exploring or planning has the
+host's own facilities for that.
 
 Dispatch the host's generic subagent with `model` set to the top Claude tier
 (`fable`) and brief it as a reviewer: it arrives with fresh context, reads the
