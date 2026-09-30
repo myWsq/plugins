@@ -30,7 +30,7 @@ These four items must carry a resolved value before work passes to the next phas
 
 For each item, retain a value and its basis: departure-check answer, later user instruction, applicable default, inspected fact, or not applicable. A later explicit user instruction overrides an older handoff or plan field; update the affected fields without reopening settled items. Do not advance dependent work while a user decision remains unresolved.
 
-Once the departure check is answered, downstream skills treat its answers as standing authorization and run to the recorded endpoint without asking again. Discussion summaries carry the endpoint, the selected execution mode, and where the work will live; plans record `Execution:`, `Stop after:`, `Plan review:`, and `Workspace:` with a short basis. Pushing, opening PRs, and merging require an explicit user request; STOP and BLOCK conditions still apply.
+Once the departure check is answered, downstream skills treat its answers as standing authorization and run to the recorded endpoint without asking again. Discussion summaries carry the endpoint, the selected execution mode, and where the work will live; plans record `Execution:`, `Stop after:`, `Plan review:`, and `Workspace:` with a short basis. Pushing and opening PRs require an explicit user request, with one exception inside the `implementation` endpoint: `dev:execute-plan` pushes the branch and opens one pull request at close when its hook-injected publish block allows it, unless the user asked to leave the branch unpublished. Merging always requires an explicit user request; STOP and BLOCK conditions still apply.
 
 ## Workflow
 
@@ -156,6 +156,15 @@ What is true after this milestone. Validation: `<command>` -> expected result.
 
 Only hazards actually found during exploration — hidden coupling, ordering
 constraints, misleading names — with `file:line`. Delete this section if empty.
+
+## Merge and deploy
+
+What the diff will not tell a reviewer, found during exploration and planning:
+checks before merging that CI will not run, and what deployment needs —
+environment variables and secrets by name only, migrations and their order,
+configuration or infrastructure changes, feature flags, rollout ordering across
+services, how to roll back. `dev:execute-plan` builds the pull request body
+from this section. Delete it if empty.
 
 ## Scope
 
