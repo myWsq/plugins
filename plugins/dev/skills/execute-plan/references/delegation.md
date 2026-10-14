@@ -31,7 +31,7 @@ The prompt contains:
 Dispatch via the host's subagent/task-spawning tool (such as Claude Code's `Agent` tool or an equivalent):
 
 - Pass the full prompt as the subagent's task.
-- Dispatch the host's generic subagent with the Claude tier alias the execution mode names as `model` — `opus` by default, `fable` when chosen. Where the host does not support the alias, omit the override, use the host default, and say so in the report. There is no other executor agent type: never dispatch a custom or third-party agent definition for implementation.
+- Dispatch the host's generic subagent with the Claude tier alias the execution mode names as `model` — `opus` by default, `sonnet` or `fable` when chosen. Where the host does not support the alias, omit the override, use the host default, and say so in the report. There is no other executor agent type: never dispatch a custom or third-party agent definition for implementation.
 - Run in the background when the host supports it, so the orchestrator can monitor.
 - A single package works in the current repository on the current branch, inside the host's existing permission envelope. A concurrent unit works in the worktree and on the branch its prompt names.
 
