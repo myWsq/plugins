@@ -1,6 +1,6 @@
 ---
 name: monorepo
-description: "The owner's monorepo decision framework plus repository baseline — default to one monorepo per context (pnpm + turborepo, packages/ + apps/, changesets fixed versioning), and align the repo with the baseline: README.md for humans, AGENTS.md for agents with CLAUDE.md as a one-line pointer, a wiki/ knowledge base, MIT LICENSE, a stack-matched .gitignore, oxfmt + oxlint for TypeScript, and .agents/skills as the real project-skills directory with .claude/skills symlinked to it. Use when setting up, initializing, or aligning a repository (\"set up this project\", \"初始化项目\", \"按我的规范调整这个项目\") or when deciding repository structure and tooling (\"该不该用 monorepo\", \"monorepo 选型\", \"怎么组织这个仓库\")."
+description: "The owner's monorepo decision framework plus repository baseline — default to one monorepo per context (pnpm + turborepo, packages/ + apps/, changesets fixed versioning), and align the repo with the baseline: README.md for humans, AGENTS.md as the only agent instruction file (no CLAUDE.md), a wiki/ knowledge base, MIT LICENSE, a stack-matched .gitignore, oxfmt + oxlint for TypeScript, and .agents/skills as the real project-skills directory with .claude/skills symlinked to it. Use when setting up, initializing, or aligning a repository (\"set up this project\", \"初始化项目\", \"按我的规范调整这个项目\") or when deciding repository structure and tooling (\"该不该用 monorepo\", \"monorepo 选型\", \"怎么组织这个仓库\")."
 ---
 
 # arch:monorepo
@@ -62,27 +62,25 @@ those two audiences.
 2. **AGENTS.md — for agents.** Exactly the knowledge an agent needs to maintain
    the project that cannot be recovered by reading the code: conventions,
    constraints, and decisions with their reasons. Never restate what the code
-   already shows.
+   already shows. It is the only agent instruction file: Claude Code reads
+   `AGENTS.md` natively, so there is no `CLAUDE.md`, not even as a pointer.
 
-3. **CLAUDE.md — a pointer.** One line telling the agent to read `AGENTS.md`.
-   Nothing else.
-
-4. **wiki/ — the project knowledge base.** All project-level knowledge — specs,
+3. **wiki/ — the project knowledge base.** All project-level knowledge — specs,
    plans, research, decisions — sediments under `wiki/`. Initialize it with only a
    `wiki/README.md` index describing this convention; subdirectories appear on
    demand. Implementation plans live under `wiki/plans/`.
 
-5. **Project skills — one source, two entries.** `.agents/skills/` is the real
+4. **Project skills — one source, two entries.** `.agents/skills/` is the real
    directory for project-local agent skills; `.claude/skills` is a symlink to it.
-   Same logic as AGENTS.md vs CLAUDE.md: the neutral location is the source, the
-   vendor location is an entry point.
+   The neutral location is the source; the vendor location is only an entry
+   point.
 
-6. **LICENSE.** MIT by default. An existing license stays.
+5. **LICENSE.** MIT by default. An existing license stays.
 
-7. **.gitignore.** Generated for the project's actual stack, not a kitchen-sink
+6. **.gitignore.** Generated for the project's actual stack, not a kitchen-sink
    template.
 
-8. **Format and lint.** TypeScript projects use oxfmt and oxlint with minimal
+7. **Format and lint.** TypeScript projects use oxfmt and oxlint with minimal
    configuration and `fmt`/`lint` package scripts. Consult the tools' current
    documentation instead of writing config from memory. Other stacks get the
    community-standard minimal equivalent.
@@ -104,6 +102,8 @@ those two audiences.
 3. Migrate, don't duplicate — knowledge lives in exactly one place:
    - a root `plans/` directory moves into `wiki/plans/`, with references updated;
    - agent-facing conventions found in `README.md` move to `AGENTS.md`;
+   - a `CLAUDE.md` folds into the `AGENTS.md` beside it and is deleted — a bare
+     pointer or symlink to `AGENTS.md` simply goes;
    - content in `AGENTS.md` that merely restates the code is deleted;
    - skills found under `.claude/skills/` as real files move to `.agents/skills/`,
      with the symlink left in their place.
