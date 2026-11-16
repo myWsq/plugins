@@ -59,6 +59,18 @@
       },
       "category": "development",
       "homepage": "https://github.com/myWsq/plugins"
+    },
+    {
+      "name": "gpt-image",
+      "source": "./plugins/gpt-image",
+      "version": "0.3.1",
+      "description": "GPT Image 2/2.5/2.6 agent skills and CLI for generation, editing, native GIF and editable SVG output. Defaults to Image 2.6 Flare. Delivery build of wuyoscar/gpt_image_2_skill with SVG/complexity support (upstream PR #36).",
+      "author": {
+        "name": "wuyoscar",
+        "url": "https://github.com/wuyoscar"
+      },
+      "category": "design",
+      "homepage": "https://github.com/wuyoscar/gpt_image_2_skill"
     }
   ]
 }

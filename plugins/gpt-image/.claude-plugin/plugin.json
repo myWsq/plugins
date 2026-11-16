@@ -1,0 +1,34 @@
+{
+  "name": "gpt-image",
+  "description": "GPT Image 2/2.5/2.6 agent skills and CLI for generation, editing, native GIF and editable SVG output. Defaults to Image 2.6 Flare. Delivery build of wuyoscar/gpt_image_2_skill with SVG/complexity support (upstream PR #36).",
+  "version": "0.3.1",
+  "author": {
+    "name": "wuyoscar",
+    "url": "https://github.com/wuyoscar"
+  },
+  "homepage": "https://github.com/wuyoscar/gpt_image_2_skill",
+  "repository": "https://github.com/wuyoscar/gpt_image_2_skill",
+  "license": "MIT",
+  "keywords": [
+    "gpt-image-2",
+    "gpt-image",
+    "gpt-image-2-prompts",
+    "openai",
+    "image-generation",
+    "image-editing",
+    "image-prompt",
+    "text-to-image",
+    "prompt-gallery",
+    "prompt-library",
+    "prompt-templates",
+    "image-to-prompt",
+    "ai-image-prompts",
+    "agent-skills",
+    "codex-skill",
+    "claude-code-skill",
+    "chinese-typography",
+    "research-figures",
+    "anime",
+    "posters"
+  ]
+}
