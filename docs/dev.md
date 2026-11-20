@@ -2,7 +2,7 @@
 
 `dev` is a small collection of agent skills for plan-driven software development. It splits a development task into three explicit phases — exploration (the product behaviour first when the change is perceptible, then the code), implementation planning, and plan execution — and front-loads every decision that needs a human into the first phase. Everything you must decide is settled at exploration's fixed gates — the product confirmation for a perceptible change, and the departure check at the end; the rest of the chain then runs to the endpoint you chose without asking again.
 
-The division of labor: the orchestrating agent clarifies what the consumer of the change will see and do, explores the code, grills the requirement into a converged direction, writes the plan, and reviews the result. The implementation itself is delegated by default to a host subagent using `opus` where supported, otherwise the host default; self-execution remains available.
+The division of labor: the orchestrating agent clarifies what the consumer of the change will see and do, explores the code, grills the requirement into a converged direction, writes the plan, and reviews the result. The orchestrator implements the plan itself when the task needs no tier other than its own, and delegates to a host subagent on another tier — or on its own tier when the work runs concurrently.
 
 ## Skills
 
@@ -34,7 +34,7 @@ Then it reads the relevant code, validation commands, and conventions, and clari
 Exploration then closes with the **departure check** — the workflow's last confirmation gate, and a fixed one: whenever the chain continues into planning it asks a single structured question bundling the same three items, even for a small change where every item already has a recommended value.
 
 1. **Direction** — the approved direction, restated in one or two sentences.
-2. **Execution mode** — the question defined canonically in `dev:execute-plan`: the generic subagent on `sonnet`, `opus`, or `fable`, or self-execution — with the recommended tier chosen by the task's difficulty (opus when unsure). Answering here is final.
+2. **Execution mode** — the question defined canonically in `dev:execute-plan`: the generic subagent on `sonnet`, `opus`, or `fable`, or self-execution. The recommendation compares the tier the task's difficulty calls for (opus when unsure) with the orchestrator's own tier, read from the injected `<dev-orchestrator>` block: a different tier recommends the subagent on that tier; the same tier recommends self-execution, unless concurrent execution is already evident (a plan group, or plainly independent milestones), which recommends the same-tier subagent. Answering here is final.
 3. **Autopilot** — confirm that `dev:write-plan` and `dev:execute-plan` then run to completion without further confirmation, either as **plain autopilot** or with the **plan audit**: `dev:write-plan` sends the finished plan to a top-tier subagent that reads the code itself, revises it on the findings, and continues into execution without stopping. When the plan audit is available — a subagent tool present and the orchestrator not already on the audit's tier — plain autopilot is recommended by default, with a one-clause reason. The plan audit is recommended only when that reason names, for this plan, a situation where a plan error would surface only after execution and cost a lot: irreversible or external side effects (data migration, deletion, publishing, calls to external services); an amplified error (a plan group or several work packages building on one shared contract); a gap verification cannot close (the plan and its done criteria rest on the same unverified premise about the code); or a hard part beyond opus's reliable range (concurrency, security, intricate algorithmic correctness). Settling design decisions or touching a contract alone does not call for it. It is judged from the plan, not from the chosen execution mode. When the audit is unavailable, the option is omitted and plain autopilot is recommended.
 
 The workspace is not one of them. Where the work happens is read off the injected `<dev-workspace>` block rather than confirmed: from the main worktree `dev:write-plan` cuts the requirement's branch and worktree and continues there; inside a linked worktree it stays put. The departure check states which of the two will happen, along with any pending changes that would stop the move, as information — saying "plan here" is still an override, it is just no longer a question.
@@ -76,12 +76,12 @@ When a requirement genuinely decomposes, it may become a **parallel plan group**
 
 ### 3. Execute and review (`dev:execute-plan`)
 
-Two execution modes, in default preference order:
+Two execution modes:
 
 | Mode | When | Notes |
 | --- | --- | --- |
-| Subagent (default) | The host has a subagent/task tool (e.g. Claude Code's `Agent`). | Dispatches the host's generic subagent with `model: opus` by default, or `model: sonnet` or `model: fable` when chosen, only where the host supports the alias, otherwise the host default; runs inside the host's existing permission envelope, so no extra consent is needed. |
-| Self-execution | Fallback when no subagent tool exists, or an explicit choice. | The orchestrator implements directly, committing each validated step. |
+| Subagent | The task needs a tier other than the orchestrator's, or the work runs concurrently; requires a subagent/task tool (e.g. Claude Code's `Agent`). | Dispatches the host's generic subagent with `model: sonnet`, `model: opus`, or `model: fable` as chosen, only where the host supports the alias, otherwise the host default; runs inside the host's existing permission envelope, so no extra consent is needed. A request to delegate that names no tier, and a legacy recorded value, run as `subagent(opus)`. |
+| Self-execution | The task needs no tier other than the orchestrator's own; also the fallback when no subagent tool exists. | The orchestrator implements directly, committing each validated step. |
 
 The execution-mode question therefore has exactly four answers, defined in tier order — `subagent(sonnet)`, `subagent(opus)`, `subagent(fable)`, and `self` — presented with the recommended one first, and the answer lands in the plan's `Execution:` field. The plugin ships no agent definitions of its own: every delegated run goes to the host's generic subagent on a Claude tier, so there is nothing to discover, verify, or pin, and the skills never run model discovery or dispatch any other agent type. An older plan that still records a retired `dev:<vendor>-executor` value runs as `subagent(opus)`, and the report states the mapping.
 

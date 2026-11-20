@@ -1,11 +1,11 @@
 ---
 name: execute-plan
-description: "Execute an implementation plan written by dev:write-plan under `wiki/plans/` on the current branch — fanning it out into concurrent work packages in per-package worktrees when its milestones are independent — or a parallel plan group concurrently in per-plan worktrees. Use when the user asks to implement, run, execute, or delegate a plan such as `wiki/plans/20260821-share-link-claim`, `execute share-link-claim`, `run the next TODO plan`, or `run the two 20260821 plans in parallel` — match a partial name against the plan filenames. Prefers a host subagent and can self-execute before verifying and reviewing the diff."
+description: "Execute an implementation plan written by dev:write-plan under `wiki/plans/` on the current branch — fanning it out into concurrent work packages in per-package worktrees when its milestones are independent — or a parallel plan group concurrently in per-plan worktrees. Use when the user asks to implement, run, execute, or delegate a plan such as `wiki/plans/20260821-share-link-claim`, `execute share-link-claim`, `run the next TODO plan`, or `run the two 20260821 plans in parallel` — match a partial name against the plan filenames. Implements directly or delegates to a host subagent, then verifies and reviews the diff."
 ---
 
 # dev:execute-plan
 
-Execute one plan on the current branch. Delegate implementation to a host subagent (preferred) or implement it yourself — then verify the result against the plan. Under delegation, when the plan's milestones are independent, fan the plan out into concurrent **work packages** — one subagent per package, each in its own worktree. When `wiki/plans/README.md` marks a parallel group whose members are all ready, execute the group concurrently — one worktree per member. Both follow "Concurrent execution" below.
+Execute one plan on the current branch. Implement it yourself or delegate implementation to a host subagent — then verify the result against the plan. Under delegation, when the plan's milestones are independent, fan the plan out into concurrent **work packages** — one subagent per package, each in its own worktree. When `wiki/plans/README.md` marks a parallel group whose members are all ready, execute the group concurrently — one worktree per member. Both follow "Concurrent execution" below.
 
 A plan has three parts: the Record (why — requirement, decisions, the discussion that settled them), the Execution brief (what to change, where, and what the result looks like, sized to the executor's tier), and Verification (how you judge the result). A delegated executor receives the brief alone and implements it, designing only what the brief leaves to it. Quality is still enforced at verification — done criteria, scope, the brief's target states, and fidelity to recorded decisions — never by trusting the executor's account.
 
@@ -47,10 +47,10 @@ Once the departure check is answered, downstream skills treat its answers as sta
 
 This section is the canonical definition of execution modes: upstream departure checks (`dev:explore`, `dev:write-plan`) read it by name to build their question instead of duplicating the wording.
 
-Two modes, in default preference order:
+Two modes:
 
-1. **Subagent delegation (preferred)**: dispatch implementation to the host's generic subagent on a Claude tier — `opus` by default, `sonnet` or `fable` when the user chooses it — passed as the `model` argument where the host supports that alias; otherwise omit the override and use the host's default model. Available whenever the host has a subagent/task-spawning tool (such as Claude Code's `Agent` tool or an equivalent). The subagent runs inside the host's existing permission envelope — no extra consent needed — and keeps the orchestrator's context free for review.
-2. **Self-execution**: implement directly. Always available; the fallback when the host has no subagent tool, or the right choice when implementation genuinely needs the orchestrator's full capability.
+1. **Subagent delegation**: dispatch implementation to the host's generic subagent on a Claude tier — `sonnet`, `opus`, or `fable`, whichever the answer names — passed as the `model` argument where the host supports that alias; otherwise omit the override and use the host's default model. Available whenever the host has a subagent/task-spawning tool (such as Claude Code's `Agent` tool or an equivalent). The subagent runs inside the host's existing permission envelope — no extra consent needed. It earns its handoff when the task needs a tier other than the orchestrator's own, or when the work runs concurrently.
+2. **Self-execution**: implement directly. Always available; the right choice when the task needs no tier other than the orchestrator's own, and the fallback when the host has no subagent tool.
 
 Selection rules:
 
@@ -68,7 +68,14 @@ The **execution-mode question** — asked here under selection rule 4, and by up
 3. **Subagent (fable)** — the host's generic subagent with `model: fable`, for implementation that needs the top tier.
 4. **Self** — self-execution.
 
-No option is recommended by default. Whoever asks — the departure check in `dev:explore` or `dev:write-plan`, or this skill under selection rule 4 — marks one subagent option `(recommended)` by the difficulty of the task at hand, using the tier descriptions above; when unsure, recommend opus. Self is never the recommended option. Present the recommended option first, then the others in the tier order above.
+No option is recommended by default. Whoever asks — the departure check in `dev:explore` or `dev:write-plan`, or this skill under selection rule 4 — marks exactly one option `(recommended)` in two steps:
+
+1. **Task tier**: judge the difficulty of the task at hand against the tier descriptions above — sonnet, opus, or fable; opus when unsure.
+2. **Compare with the orchestrator's tier**: read your own model from the latest injected `<dev-orchestrator>` block (in Claude Code the plugin's hooks inject one at session start and when `dev:explore` or `dev:write-plan` starts); without a block, take the model the host says you run on. A model whose name is not one of the three tiers, or an unknown one, counts as opus.
+   - Different tiers: recommend the subagent on the task tier, whether it sits below or above your own.
+   - Same tier: recommend **Self**, since a same-tier subagent only adds a handoff. Exception: when concurrent execution is already evident at the time of asking — the work is a plan group, or its milestones are plainly independent — recommend the subagent on that tier, because only delegation runs work concurrently (see "Concurrent execution").
+
+For example, an opus orchestrator recommends Self for an ordinary task, Subagent (sonnet) for a mechanical one, and Subagent (fable) for one that needs the top tier; a fable orchestrator recommends Subagent (opus) for an ordinary task and Self for one that needs the top tier. Present the recommended option first, then the others in the tier order above.
 
 Record the answer as `subagent(sonnet)`, `subagent(opus)`, `subagent(fable)`, or `self`. Outside this question, offer the options again only when the user asks to change the mode or an actual blocker requires a replacement; retain an existing selection unless the user changes it.
 
